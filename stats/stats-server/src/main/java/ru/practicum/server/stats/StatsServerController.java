@@ -6,18 +6,15 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.stats.EndpointHitDto;
-import ru.practicum.ewm.dto.stats.ViewStatsDto;
-import ru.practicum.ewm.dto.stats.ViewsStatsRequsetDto;
 
 import javax.validation.Valid;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
 @Slf4j
 @AllArgsConstructor
-public class StatsServerClient {
+public class StatsServerController {
 
     private final StatsServer statsServer;
 

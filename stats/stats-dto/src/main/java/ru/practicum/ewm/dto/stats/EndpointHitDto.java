@@ -13,8 +13,6 @@ import java.time.LocalDateTime;
 @Builder
 @Jacksonized
 @JsonIgnoreProperties(ignoreUnknown = true)
-//@Entity
-//@Table(name = "HITS")
 public class EndpointHitDto {
 
     private Long id;

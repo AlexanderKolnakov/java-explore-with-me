@@ -12,6 +12,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
+    volumes:
+      - /etc/localtime:/etc/timezone:ro
 
   stats-db:
     image: postgres:15.1-alpine
@@ -19,7 +21,7 @@ services:
     ports:
       - "6541:5432"
     environment:
-      - POSTGRES_DB=stats
+      - POSTGRES_DB=ewm-stats
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
 

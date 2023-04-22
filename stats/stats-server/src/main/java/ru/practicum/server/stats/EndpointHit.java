@@ -1,9 +1,7 @@
 package ru.practicum.server.stats;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
-import lombok.extern.jackson.Jacksonized;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;

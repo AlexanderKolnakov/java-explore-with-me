@@ -13,9 +13,23 @@ public interface StatsRepository extends JpaRepository<EndpointHit, Long> {
     List<EndpointHit> searchStats(LocalDateTime start, LocalDateTime end, String uris);
 
 
-    @Query(value = "select new ru.practicum.server.stats.ViewStats(COUNT (distinct HH.uri) , HH.app , HH.uri) " +
-            "from EndpointHit HH " +
-            "where HH.timestamp > ?1 and HH.timestamp < ?2 " +
-            "group by HH.uri, HH.app")
+    @Query(value = "select new ru.practicum.server.stats.ViewStats(COUNT (distinct h.uri) , h.app , h.uri) " +
+            "from EndpointHit h " +
+            "where h.timestamp > ?1 and h.timestamp < ?2 " +
+            "group by h.uri, h.app")
     List<ViewStats> searchStatsForAllUri(LocalDateTime start, LocalDateTime end);
+
+
+    @Query(value = "select new ru.practicum.server.stats.ViewStats(COUNT (distinct h.uri) , h.app , h.uri) " +
+            "from EndpointHit h " +
+            "where h.timestamp > ?1 and h.timestamp < ?2 " +
+            "group by h.ip, h.app, h.uri")
+    List<ViewStats> searchStatsWithUniqIpByAllUris(LocalDateTime start, LocalDateTime end);
+
+
+    @Query(value = "select new ru.practicum.server.stats.ViewStats(COUNT (distinct h.uri) , h.app , h.uri) " +
+            "from EndpointHit h " +
+            "where h.uri = ?3 and h.timestamp > ?1 and h.timestamp < ?2 " +
+            "group by h.ip, h.app, h.uri")
+    List<ViewStats> searchStatsWithUniqIp(LocalDateTime start, LocalDateTime end, String uris);
 }
