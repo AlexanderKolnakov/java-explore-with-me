@@ -10,7 +10,6 @@ import java.util.List;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-//@Table(name = "HITS")
 public class UpdateCompilationRequest {
 
     // Изменение информации о подборке событий.
