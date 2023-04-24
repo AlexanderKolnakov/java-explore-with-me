@@ -1,10 +1,14 @@
 package ru.practicum.mainserver.category;
 
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
 import ru.practicum.mainserver.category.models.CategoryDto;
 import ru.practicum.mainserver.category.models.NewCategoryDto;
 
 import java.util.List;
 
+@Service
+@AllArgsConstructor
 public class CategoryService {
     public CategoryDto getCategoryById(int catId) {
         return null;

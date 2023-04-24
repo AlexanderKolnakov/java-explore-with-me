@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-//@Table(name = "HITS")
 public class UpdateEventUserRequest {
 
     // Данные для изменения информации о событии.
