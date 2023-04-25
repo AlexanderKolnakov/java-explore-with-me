@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-//@Table(name = "HITS")
 public class NewEventDto {
 
     //  Новое событие
@@ -21,7 +20,7 @@ public class NewEventDto {
             message = "Описание события должно быть не менее чем из 20 символов, но не более 2000.")
     private String annotation;  // Краткое описание события
 
-    private int category;   // id категории к которой относится событие
+    private Long category;   // id категории к которой относится событие
 
     @Size(min = 20, max = 7000,
             message = "Полное описание события должно быть не менее чем из 20 символов, но не более 7000.")
@@ -34,7 +33,7 @@ public class NewEventDto {
 
     private boolean paid;   // Нужно ли оплачивать участие в событии
 
-    private int participantLimit;   // Ограничение на количество участников. Значение 0 - означает отсутствие ограничения
+    private Long participantLimit;   // Ограничение на количество участников. Значение 0 - означает отсутствие ограничения
 
     private boolean requestModeration;   // Нужна ли пре-модерация заявок на участие.
     // Если true, то все заявки будут ожидать подтверждения инициатором события.

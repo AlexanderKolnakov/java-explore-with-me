@@ -1,12 +1,8 @@
 package ru.practicum.mainserver.user.models;
 
-
 import lombok.*;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Getter
 @Setter
@@ -14,7 +10,7 @@ import javax.persistence.Id;
 @RequiredArgsConstructor
 @Entity
 @AllArgsConstructor
-//@Table(name = "HITS")
+@Table(name = "USERS")
 public class UserDto {
 
     // Пользователь
@@ -23,7 +19,9 @@ public class UserDto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;   // Идентификатор пользователя
 
+    @Column(name = "USER_NAME")
     private String name;   // Имя пользователя
 
+    @Column(name = "USER_EMAIL")
     private String email;   // Почтовый адрес пользователя
 }

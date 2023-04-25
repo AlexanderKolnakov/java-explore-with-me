@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainserver.category.models.CategoryDto;
 import ru.practicum.mainserver.category.models.NewCategoryDto;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -20,21 +21,21 @@ public class CategoryController {
 
     @PostMapping("/admin/categories")
     @ResponseStatus(HttpStatus.CREATED)
-    public CategoryDto createCategory(@RequestBody NewCategoryDto newCategoryDto) {
+    public CategoryDto createCategory(@RequestBody @Valid NewCategoryDto newCategoryDto) {
         log.debug("ADMIN. Получен POST запрос на добавление новой категории.");
         return categoryService.createCategory(newCategoryDto);
     }
 
     @DeleteMapping("/admin/categories/{catId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCategory(@PathVariable int catId) {
+    public void deleteCategory(@PathVariable Long catId) {
         log.debug("ADMIN. Получен DELETE запрос на удаление категории с id: {}.", catId);
         categoryService.deleteCategory(catId);
     }
 
     @PatchMapping("/admin/categories/{catId}")
     public CategoryDto updateCategory(
-            @PathVariable int catId, @RequestBody NewCategoryDto newCategoryDto) {
+            @PathVariable Long catId, @RequestBody @Valid NewCategoryDto newCategoryDto) {
         log.debug("ADMIN. Получен PATCH запрос на обновление категории с id: " + catId);
         return categoryService.updateCategory(catId, newCategoryDto);
     }
@@ -48,7 +49,7 @@ public class CategoryController {
     }
 
     @GetMapping("/categories/{catId}")
-    public CategoryDto getCategoryById(@PathVariable int catId) {
+    public CategoryDto getCategoryById(@PathVariable Long catId) {
         log.info("Получен GET запрос на получение категории c id - + " + catId);
         return categoryService.getCategoryById(catId);
     }

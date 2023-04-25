@@ -20,7 +20,7 @@ public class UpdateEventAdminRequest {
             message = "Новая аннотация должна быть не менее чем из 20 символов, но не более 2000.")
     private String annotation;   // Новая аннотация
 
-    private int category;   // Новая категория
+    private Long category;   // Новая категория
 
     @Size(min = 20, max = 7000,
             message = "Новое описание должно быть не менее чем из 20 символов, но не более 2000.")
@@ -33,7 +33,7 @@ public class UpdateEventAdminRequest {
 
     private  boolean paid;   // Новое значение флага о платности мероприятия
 
-    private int participantLimit;   // Новый лимит пользователей
+    private Long participantLimit;   // Новый лимит пользователей
 
     private boolean requestModeration;   // Нужна ли пре-модерация заявок на участие
 

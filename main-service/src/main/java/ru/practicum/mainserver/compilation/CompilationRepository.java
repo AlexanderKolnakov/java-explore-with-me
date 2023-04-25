@@ -1,4 +1,4 @@
-package ru.practicum.mainserver.compilation;
-
-public interface CompilationRepository {
-}
+//package ru.practicum.mainserver.compilation;
+//
+//public interface CompilationRepository {
+//}

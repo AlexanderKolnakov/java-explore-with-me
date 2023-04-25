@@ -12,15 +12,17 @@ import javax.validation.constraints.NotBlank;
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Entity
-//@Table(name = "HITS")
+@Table(name = "CATEGORYS", uniqueConstraints= @UniqueConstraint(columnNames={"ID", "CATEGORY_NAME"}))
 public class CategoryDto {
 
     // Категория
 
     @Id
+    @Column(name = "ID")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;   // Идентификатор категории
 
-    @NotBlank(message = "Название категории не может быть пустым или Null")
+    @Column(name = "CATEGORY_NAME")
+    @NotBlank(message = "Field: {name}. Error: must not be blank. Value: null")
     private String name;   // Название категории
 }

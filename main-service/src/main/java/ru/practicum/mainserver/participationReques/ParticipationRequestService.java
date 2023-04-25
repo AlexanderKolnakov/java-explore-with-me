@@ -9,16 +9,16 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 public class ParticipationRequestService {
-    public List<ParticipationRequestDto> getParticipationRequestByUserId(int userId) {
+    public List<ParticipationRequestDto> getParticipationRequestByUserId(Long userId) {
         return null;
     }
 
-    public ParticipationRequestDto createParticipationRequest(int userId, int eventId) {
+    public ParticipationRequestDto createParticipationRequest(Long userId, Long eventId) {
         return null;
 
     }
 
-    public ParticipationRequestDto cancelParticipationRequestByUserId(int userId, int requestId) {
+    public ParticipationRequestDto cancelParticipationRequestByUserId(Long userId, Long requestId) {
         return null;
 
     }

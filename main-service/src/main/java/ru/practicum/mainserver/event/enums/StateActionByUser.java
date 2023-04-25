@@ -1,5 +1,5 @@
 package ru.practicum.mainserver.event.enums;
 
-public enum stateActionByUser {
+public enum StateActionByUser {
     SEND_TO_REVIEW, CANCEL_REVIEW
 }

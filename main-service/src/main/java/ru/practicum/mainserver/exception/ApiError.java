@@ -11,17 +11,17 @@ import java.time.LocalDateTime;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class ApiError {
+public class ApiError extends RuntimeException {
 
     // Сведения об ошибке
 
-    private String errors;   // Список стектрейсов или описания ошибок
+    //    private String errors;   // Список стектрейсов или описания ошибок
 
-    private String message;   // Сообщение об ошибке
+    private String status;   // Код статуса HTTP-ответа
 
     private String reason;   // Общее описание причины ошибки
 
-    private String status;   // Код статуса HTTP-ответа
+    private String message;   // Сообщение об ошибке
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;   // Дата и время когда произошла ошибка

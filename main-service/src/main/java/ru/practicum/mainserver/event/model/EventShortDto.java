@@ -14,8 +14,6 @@ import java.time.LocalDateTime;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-@Entity
-//@Table(name = "HITS")
 public class EventShortDto {
 
     // Краткая информация о событии
@@ -24,12 +22,12 @@ public class EventShortDto {
 
     private CategoryDto category;   //   Категория
 
-    private int confirmedRequests;   // Количество одобренных заявок на участие в данном событии
+    private Long confirmedRequests;   // Количество одобренных заявок на участие в данном событии
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;   // Дата и время на которые намечено событие
 
-    private int id;   // Идентификатор события
+    private Long id;   // Идентификатор события
 
     private UserShortDto initiator; // Пользователь (краткая информация)
 

@@ -19,11 +19,11 @@ public class ParticipationRequestDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime created;   // Дата и время создания заявки
 
-    private int event;   // Идентификатор события
+    private Long event;   // Идентификатор события
 
-    private int id;   // Идентификатор заявки
+    private Long id;   // Идентификатор заявки
 
-    private int requester;   // Идентификатор пользователя, отправившего заявку
+    private Long requester;   // Идентификатор пользователя, отправившего заявку
 
     private String status;   // Статус заявки
 }

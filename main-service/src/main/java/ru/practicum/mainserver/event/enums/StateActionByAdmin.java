@@ -1,5 +1,5 @@
 package ru.practicum.mainserver.event.enums;
 
-public enum stateActionByAdmin {
+public enum StateActionByAdmin {
     PUBLISH_EVENT, REJECT_EVENT
 }

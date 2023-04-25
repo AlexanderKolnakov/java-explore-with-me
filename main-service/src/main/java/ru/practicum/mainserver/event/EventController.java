@@ -5,12 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.mainserver.compilation.models.UpdateCompilationRequest;
 import ru.practicum.mainserver.event.model.*;
 import ru.practicum.mainserver.participationReques.model.EventRequestStatusUpdateRequest;
 import ru.practicum.mainserver.participationReques.model.EventRequestStatusUpdateResult;
 import ru.practicum.mainserver.participationReques.model.ParticipationRequestDto;
 
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class EventController {
     @GetMapping("/events")
     public List<EventShortDto> getEvents(
             @RequestParam String text,
-            @RequestParam int categories,
+            @RequestParam Long categories,
             @RequestParam("paid") Boolean paid,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
@@ -38,14 +38,14 @@ public class EventController {
     }
 
     @GetMapping("/events/{id}")
-    public EventFullDto getFullEventsById(@PathVariable int id) {
+    public EventFullDto getFullEventsById(@PathVariable Long id) {
         log.info("Получен GET запрос на получение информации о событий c id - " + id);
         return eventService.getFullEventsById(id);
     }
 
     @GetMapping("/users/{userId}/events")
     public List<EventShortDto> getEventsByUserId(
-            @PathVariable int userId,
+            @PathVariable Long userId,
             @RequestParam(name = "from", defaultValue = "0") int from,
             @RequestParam(name = "size", defaultValue = "10") int size) {
         log.info("Получен GET запрос на получение списка событий, добавленных пользователем c id - " + userId);
@@ -54,16 +54,16 @@ public class EventController {
 
     @PostMapping("/users/{userId}/events")
     @ResponseStatus(HttpStatus.CREATED)
-    public EventFullDto createEventByUser(@PathVariable int userId,
-                                          @RequestBody NewEventDto newEventDto) {
+    public EventFullDto createEventByUser(@PathVariable Long userId,
+                                          @RequestBody @Valid NewEventDto newEventDto) {
         log.debug("Получен POST запрос на создание нового события от пользователя с id - " + userId);
         return eventService.createEventByUser(userId, newEventDto);
     }
 
     @GetMapping("/users/{userId}/events/{eventId}")
     public EventFullDto getFullEventsByUserId(
-            @PathVariable int userId,
-            @PathVariable int eventId) {
+            @PathVariable Long userId,
+            @PathVariable Long eventId) {
         log.info("Получен GET запрос на получение полной информации о событии с id " + eventId + ", " +
                 "добавленной пользователем c id - " + userId);
         return eventService.getFullEventsByUserId(userId, eventId);
@@ -71,9 +71,9 @@ public class EventController {
 
     @PatchMapping("/users/{userId}/events/{eventId}")
     public EventFullDto updateFullEventsByUserId(
-            @PathVariable int userId,
-            @PathVariable int eventId,
-            @RequestBody UpdateEventUserRequest updateEventUserRequest) {
+            @PathVariable Long userId,
+            @PathVariable Long eventId,
+            @RequestBody  @Valid UpdateEventUserRequest updateEventUserRequest) {
         log.debug("Получен PATCH запрос на обновление информации о событии с id " + eventId + ", " +
                 "добавленной пользователем c id - " + userId);
         return eventService.updateFullEventsByUserId(updateEventUserRequest, userId, eventId);
@@ -81,8 +81,8 @@ public class EventController {
 
     @GetMapping("/users/{userId}/events/{eventId}/requests")
     public List<ParticipationRequestDto> getParticipationRequestByUserId(
-            @PathVariable int userId,
-            @PathVariable int eventId) {
+            @PathVariable Long userId,
+            @PathVariable Long eventId) {
         log.info("Получен GET запрос на получение информации о запросах на " +
                 "участие в событии с id " + eventId + ", " +
                 "от пользователем c id - " + userId);
@@ -91,9 +91,9 @@ public class EventController {
 
     @PatchMapping("/users/{userId}/events/{eventId}/requests")
     public EventRequestStatusUpdateResult updateEventRequestStatusByUserId(
-            @PathVariable int userId,
-            @PathVariable int eventId,
-            @RequestBody EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest) {
+            @PathVariable Long userId,
+            @PathVariable Long eventId,
+            @RequestBody  @Valid EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest) {
         log.debug("Получен PATCH запрос на обновление информации о событии с id " + eventId + ", " +
                 "добавленной пользователем c id - " + userId);
         return eventService.updateEventRequestStatusByUserId(eventRequestStatusUpdateRequest, userId, eventId);
@@ -101,9 +101,9 @@ public class EventController {
 
     @GetMapping("/admin/events")
     public List<EventFullDto> getEventsByAdmin(
-            @RequestParam int users,
+            @RequestParam Long users,
             @RequestParam String states,
-            @RequestParam int categories,
+            @RequestParam Long categories,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
             @RequestParam(name = "from", defaultValue = "0") int from,
@@ -114,8 +114,8 @@ public class EventController {
 
     @PatchMapping("/admin/events/{eventId}")
     public EventFullDto updateEventsByAdmin(
-            @PathVariable int eventId,
-            @RequestBody UpdateEventAdminRequest updateEventAdminRequest) {
+            @PathVariable Long eventId,
+            @RequestBody  @Valid UpdateEventAdminRequest updateEventAdminRequest) {
         log.debug("ADMIN. Получен PATCH запрос на обновление информации о событии с id " + eventId);
         return eventService.updateEventsByAdmin(updateEventAdminRequest, eventId);
     }
