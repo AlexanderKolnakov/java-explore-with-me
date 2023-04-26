@@ -26,9 +26,7 @@ public class CategoryService {
                         "The required object was not found.",
                         "Category with id=" + catId + " was not found",
                         LocalDateTime.now()));
-
     }
-
 
     public List<CategoryDto> getCategory(int from, int size) {
 

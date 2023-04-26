@@ -101,9 +101,9 @@ public class EventController {
 
     @GetMapping("/admin/events")
     public List<EventFullDto> getEventsByAdmin(
-            @RequestParam Long users,
-            @RequestParam String states,
-            @RequestParam Long categories,
+            @RequestParam List<Long> users,
+            @RequestParam List<String> states,
+            @RequestParam List<Long> categories,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
             @RequestParam(name = "from", defaultValue = "0") int from,
