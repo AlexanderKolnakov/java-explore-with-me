@@ -9,17 +9,19 @@ import org.springframework.stereotype.Service;
 import ru.practicum.mainserver.category.CategoryRepository;
 import ru.practicum.mainserver.category.CategoryService;
 import ru.practicum.mainserver.category.models.CategoryDto;
+import ru.practicum.mainserver.event.enums.StateActionByAdmin;
 import ru.practicum.mainserver.event.enums.StateEvent;
 import ru.practicum.mainserver.event.model.*;
 import ru.practicum.mainserver.exception.ApiError;
 import ru.practicum.mainserver.participationReques.ParticipationRequestRepository;
 import ru.practicum.mainserver.participationReques.enums.StatusRequest;
-import ru.practicum.mainserver.participationReques.model.EventRequestStatusUpdateRequest;
-import ru.practicum.mainserver.participationReques.model.EventRequestStatusUpdateResult;
+import ru.practicum.mainserver.event.model.EventRequestStatusUpdateRequest;
+import ru.practicum.mainserver.event.model.EventRequestStatusUpdateResult;
 import ru.practicum.mainserver.participationReques.model.ParticipationRequestDto;
 import ru.practicum.mainserver.user.UserRepository;
 import ru.practicum.mainserver.user.models.UserDto;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,11 +41,23 @@ public class EventService {
     public List<EventShortDto> getEvents
             (String text, Long categories, Boolean paid, LocalDateTime rangeStart,
              LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, int from, int size) {
+        if (rangeStart.isEqual(null)) {
+            rangeStart = LocalDateTime.now();
+        }
+
+
+        // НУЖНО ПОДКЛЮЧИТЬ СЕРВИС СТАТИСТИКИ
 
         return null;
+
     }
 
     public EventFullDto getFullEventsById(Long id) {
+
+        // НУЖНО ПОДКЛЮЧИТЬ СЕРВИС СТАТИСТИКИ
+
+
+
         return null;
 
     }
@@ -58,10 +72,16 @@ public class EventService {
 //            return EventMapper.listEventToListEventShortDto(eventList);
 //        }
 
-        return eventRepository.findEventByCreatedUserId(userId, pageable)
-                .orElse(Collections.emptyList());
+
+
+        // настройка бинов
+//        return eventRepository.findEventByCreatedUserId(userId, pageable)
+//                .orElse(Collections.emptyList());
+
+        return null;
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public EventFullDto createEventByUser(Long userId, NewEventDto newEventDto) {
         checkDataTime(newEventDto.getEventDate());
         UserDto user = checkUserById(userId);
@@ -82,6 +102,7 @@ public class EventService {
         return checkEventInitiator(event, userId);
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public EventFullDto updateFullEventsByUserId
             (UpdateEventUserRequest updateEventUserRequest, Long userId, Long eventId) {
 
@@ -101,6 +122,8 @@ public class EventService {
             event.setRequestModeration(updateEventUserRequest.isRequestModeration());
             event.setState(updateEventUserRequest.getStateAction());
             event.setTitle(updateEventUserRequest.getTitle());
+
+            eventRepository.save(event);
 
             return EventMapper.eventToEventFullDto(event);
         } else {
@@ -152,8 +175,10 @@ public class EventService {
 
             // ТУТ ХЗ СО СТАТУСАМИ КАК
         }
+
         // ТУТ ХЗ СО СТАТУСАМИ КАК
 
+        return null;
     }
 
     public List<EventFullDto> getEventsByAdmin(List<Long> users, List<String> states,
@@ -161,20 +186,51 @@ public class EventService {
                                                LocalDateTime rangeEnd, int from, int size) {
 
         Pageable pageable = PageRequest.of((from / size), size);
-        return eventRepository.findEventFullWhitParametersByAdmin(users, states, categories, rangeStart, rangeEnd, pageable)
-                .orElse(Collections.emptyList());
+
+
+        // настройка бинов
+//        return eventRepository.findEventFullWhitParametersByAdmin(users, states, categories, rangeStart, rangeEnd, pageable)
+//                .orElse(Collections.emptyList());
+
+        return null;
+
+
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public EventFullDto updateEventsByAdmin(UpdateEventAdminRequest updateEventAdminRequest, Long eventId) {
 
+        if(updateEventAdminRequest.getEventDate().plusHours(1).isBefore(LocalDateTime.now())) {
+            throw new DataIntegrityViolationException("Date of update Events is too early");
+        }
+        Event event = checkEventById(eventId);
+        if (event.getState().equals(StateEvent.PUBLISHED.toString())) {
+            throw new DataIntegrityViolationException("Cannot publish the event because " +
+                    "it's not in the right state: PUBLISHED");
+        }
+        if (updateEventAdminRequest.getStateAction().equals(StateActionByAdmin.REJECT_EVENT.toString())
+                && event.getState().equals(StateEvent.PUBLISHED.toString())) {
+            throw new DataIntegrityViolationException("Event already PUBLISHED");
+        }
+        event.setAnnotation(updateEventAdminRequest.getAnnotation());
+        event.setCategory(categoryRepository.findById(updateEventAdminRequest.getCategory()).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
+                "The required object was not found.",
+                "Category with id=" + updateEventAdminRequest.getCategory() + " was not found",
+                LocalDateTime.now())));
 
+        event.setDescription(updateEventAdminRequest.getDescription());
+        event.setEventDate(updateEventAdminRequest.getEventDate());
+        event.setLat(updateEventAdminRequest.getLocation().getLat());
+        event.setLon(updateEventAdminRequest.getLocation().getLon());
+        event.setPaid(updateEventAdminRequest.isPaid());
+        event.setParticipantLimit(updateEventAdminRequest.getParticipantLimit());
+        event.setRequestModeration(updateEventAdminRequest.isRequestModeration());
+        event.setState(updateEventAdminRequest.getStateAction());
+        event.setTitle(updateEventAdminRequest.getTitle());
 
+        eventRepository.save(event);
 
-
-
-
-
-
+        return EventMapper.eventToEventFullDto(event);
     }
 
 

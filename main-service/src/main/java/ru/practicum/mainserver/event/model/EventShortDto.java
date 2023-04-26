@@ -3,6 +3,7 @@ package ru.practicum.mainserver.event.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
+import org.springframework.stereotype.Component;
 import ru.practicum.mainserver.category.models.CategoryDto;
 import ru.practicum.mainserver.user.models.UserShortDto;
 
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
+
 public class EventShortDto {
 
     // Краткая информация о событии

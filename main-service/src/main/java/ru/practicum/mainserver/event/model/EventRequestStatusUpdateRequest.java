@@ -1,4 +1,4 @@
-package ru.practicum.mainserver.participationReques.model;
+package ru.practicum.mainserver.event.model;
 
 
 import lombok.*;

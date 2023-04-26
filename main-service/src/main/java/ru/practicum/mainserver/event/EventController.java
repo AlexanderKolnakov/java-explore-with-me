@@ -6,8 +6,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainserver.event.model.*;
-import ru.practicum.mainserver.participationReques.model.EventRequestStatusUpdateRequest;
-import ru.practicum.mainserver.participationReques.model.EventRequestStatusUpdateResult;
+import ru.practicum.mainserver.event.model.EventRequestStatusUpdateRequest;
+import ru.practicum.mainserver.event.model.EventRequestStatusUpdateResult;
 import ru.practicum.mainserver.participationReques.model.ParticipationRequestDto;
 
 import javax.validation.Valid;
@@ -115,7 +115,7 @@ public class EventController {
     @PatchMapping("/admin/events/{eventId}")
     public EventFullDto updateEventsByAdmin(
             @PathVariable Long eventId,
-            @RequestBody  @Valid UpdateEventAdminRequest updateEventAdminRequest) {
+            @RequestBody @Valid UpdateEventAdminRequest updateEventAdminRequest) {
         log.debug("ADMIN. Получен PATCH запрос на обновление информации о событии с id " + eventId);
         return eventService.updateEventsByAdmin(updateEventAdminRequest, eventId);
     }

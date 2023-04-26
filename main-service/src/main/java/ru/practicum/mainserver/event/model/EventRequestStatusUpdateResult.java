@@ -1,7 +1,8 @@
-package ru.practicum.mainserver.participationReques.model;
+package ru.practicum.mainserver.event.model;
 
 
 import lombok.*;
+import ru.practicum.mainserver.participationReques.model.ParticipationRequestDto;
 
 import java.util.List;
 

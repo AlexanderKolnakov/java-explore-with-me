@@ -10,6 +10,7 @@ import ru.practicum.mainserver.category.models.CategoryDto;
 import ru.practicum.mainserver.category.models.NewCategoryDto;
 import ru.practicum.mainserver.exception.ApiError;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -35,6 +36,7 @@ public class CategoryService {
         return categoryRepository.findAll(pageable).toList();
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public CategoryDto updateCategory(Long catId, NewCategoryDto newCategoryDto) {
 
         getCategoryById(catId);
@@ -58,6 +60,7 @@ public class CategoryService {
         categoryRepository.deleteById(catId);
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public CategoryDto createCategory(NewCategoryDto newCategoryDto) {
 
         List<CategoryDto> categoryWhitNewName = categoryRepository.findCategoryByName(newCategoryDto.getName());

@@ -13,6 +13,7 @@ import ru.practicum.mainserver.participationReques.model.ParticipationRequestDto
 import ru.practicum.mainserver.user.UserRepository;
 import ru.practicum.mainserver.user.models.UserDto;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +32,7 @@ public class ParticipationRequestService {
         return participationRequestRepository.findByUserId(userId);
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public ParticipationRequestDto createParticipationRequest(Long userId, Long eventId) {
         checkUserById(userId);
         Event event = checkEventById(eventId);
@@ -55,6 +57,7 @@ public class ParticipationRequestService {
     }
 
 
+    @Transactional(rollbackOn = Exception.class)
     public ParticipationRequestDto cancelParticipationRequestByUserId(Long userId, Long requestId) {
         checkUserById(userId);
 

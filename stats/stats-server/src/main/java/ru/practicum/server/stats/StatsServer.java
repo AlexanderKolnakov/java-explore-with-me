@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.dto.stats.EndpointHitDto;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,6 +19,7 @@ public class StatsServer {
 
     private final StatsRepository statsRepository;
 
+    @Transactional(rollbackOn = Exception.class)
     public EndpointHitDto addEndpointHit(EndpointHitDto endpointHit) {
         statsRepository.save(HitMapper.dtoToEndpointHit(endpointHit));
         return endpointHit;

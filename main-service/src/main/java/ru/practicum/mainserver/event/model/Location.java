@@ -2,6 +2,7 @@ package ru.practicum.mainserver.event.model;
 
 
 import lombok.*;
+import org.springframework.stereotype.Component;
 
 
 @Getter
@@ -9,6 +10,7 @@ import lombok.*;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
+
 public class Location {
 
     // Широта и долгота места проведения события
