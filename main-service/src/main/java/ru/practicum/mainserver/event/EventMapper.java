@@ -51,6 +51,10 @@ public class EventMapper {
         eventFullDto.setPaid(createdEvent.isPaid());
         eventFullDto.setParticipantLimit(createdEvent.getParticipantLimit());
 
+
+        eventFullDto.setPublishedOn(createdEvent.getPublishedOn());  // ???
+
+
         eventFullDto.setRequestModeration(createdEvent.isRequestModeration());
         eventFullDto.setState(createdEvent.getState());
         eventFullDto.setTitle(createdEvent.getTitle());
@@ -83,5 +87,14 @@ public class EventMapper {
         eventShortDto.setViews(event.getViews());
 
         return eventShortDto;
+    }
+
+    public static List<EventFullDto> listEventToListEventFullDto(List<Event> eventList) {
+        List<EventFullDto> eventFullDtoList = new ArrayList<>();
+
+        for (Event event: eventList) {
+            eventFullDtoList.add(eventToEventFullDto(event));
+        }
+        return eventFullDtoList;
     }
 }

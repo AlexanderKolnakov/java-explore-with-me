@@ -5,6 +5,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ru.practicum.mainserver.event.EventRepository;
+import ru.practicum.mainserver.event.enums.StateActionByAdmin;
 import ru.practicum.mainserver.event.enums.StateEvent;
 import ru.practicum.mainserver.event.model.Event;
 import ru.practicum.mainserver.exception.ApiError;
@@ -88,14 +89,15 @@ public class ParticipationRequestService {
     }
 
     private void checkEventState(Event event) {
-        if (!event.getState().equals(StateEvent.PUBLISHED.toString())) {
+        if (!(event.getState().equals(StateEvent.PUBLISHED.toString())
+                || event.getState().equals(StateActionByAdmin.PUBLISH_EVENT.toString()))) {
             throw new DataIntegrityViolationException("Event with id=" + event.getId() +
                     " not published");
         }
     }
 
     private void checkEventByUserIsCreated(Long userId, Long eventId) {
-        if (participationRequestRepository.findByUserAndEventId(userId, eventId).orElse(Collections.emptyList()).isEmpty()) {
+        if (!participationRequestRepository.findByUserAndEventId(userId, eventId).orElse(Collections.emptyList()).isEmpty()) {
             throw new DataIntegrityViolationException("Event with id=" + eventId +
                     " already created by user with id=" + userId);
         }

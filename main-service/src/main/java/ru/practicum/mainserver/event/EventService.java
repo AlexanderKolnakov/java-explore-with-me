@@ -1,6 +1,7 @@
 package ru.practicum.mainserver.event;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -9,14 +10,13 @@ import org.springframework.stereotype.Service;
 import ru.practicum.mainserver.category.CategoryRepository;
 import ru.practicum.mainserver.category.CategoryService;
 import ru.practicum.mainserver.category.models.CategoryDto;
+import ru.practicum.mainserver.event.enums.SortEvent;
 import ru.practicum.mainserver.event.enums.StateActionByAdmin;
 import ru.practicum.mainserver.event.enums.StateEvent;
 import ru.practicum.mainserver.event.model.*;
 import ru.practicum.mainserver.exception.ApiError;
 import ru.practicum.mainserver.participationReques.ParticipationRequestRepository;
 import ru.practicum.mainserver.participationReques.enums.StatusRequest;
-import ru.practicum.mainserver.event.model.EventRequestStatusUpdateRequest;
-import ru.practicum.mainserver.event.model.EventRequestStatusUpdateResult;
 import ru.practicum.mainserver.participationReques.model.ParticipationRequestDto;
 import ru.practicum.mainserver.user.UserRepository;
 import ru.practicum.mainserver.user.models.UserDto;
@@ -25,9 +25,12 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @AllArgsConstructor
 public class EventService {
 
@@ -41,21 +44,45 @@ public class EventService {
     public List<EventShortDto> getEvents
             (String text, Long categories, Boolean paid, LocalDateTime rangeStart,
              LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, int from, int size) {
-        if (rangeStart.isEqual(null)) {
+
+        Pageable pageable = PageRequest.of((from / size), size);
+        if (rangeStart == null) {
             rangeStart = LocalDateTime.now();
+        }
+        List<Event> resultList;
+
+        if (onlyAvailable) {
+
+            resultList = eventRepository
+                    .findPublicEventWhitParametersByUserWhereEventAvailable(rangeStart, rangeEnd,
+                            StateEvent.PUBLISHED.toString(), categories, paid, text, pageable)
+                    .orElse(Collections.emptyList());
+        } else {
+            resultList = eventRepository
+                    .findPublicEventWhitParametersByUser(rangeStart, rangeEnd,
+                            StateEvent.PUBLISHED.toString(), categories, paid, text, pageable)
+                    .orElse(Collections.emptyList());
+        }
+        if (sort.equals(SortEvent.EVENT_DATE.toString())) {
+            resultList.stream()
+                    .sorted(Comparator.comparing(Event::getEventDate).reversed())
+                    .collect(Collectors.toList());
+        }
+        if (sort.equals(SortEvent.VIEWS.toString())) {
+            resultList.stream()
+                    .sorted(Comparator.comparing(Event::getViews).reversed())
+                    .collect(Collectors.toList());
         }
 
 
         // НУЖНО ПОДКЛЮЧИТЬ СЕРВИС СТАТИСТИКИ
 
-        return null;
-
+        return EventMapper.listEventToListEventShortDto(resultList);
     }
 
     public EventFullDto getFullEventsById(Long id) {
 
         // НУЖНО ПОДКЛЮЧИТЬ СЕРВИС СТАТИСТИКИ
-
 
 
         return null;
@@ -65,20 +92,13 @@ public class EventService {
     public List<EventShortDto> getEventsByUserId(Long userId, int from, int size) {
         Pageable pageable = PageRequest.of((from / size), size);
 
-//        List<Event> eventList = eventRepository.findEventByCreatedUserId(userId, pageable);
-//        if (eventList.isEmpty()) {
-//            return Collections.emptyList();
-//        } else {
-//            return EventMapper.listEventToListEventShortDto(eventList);
-//        }
-
-
-
-        // настройка бинов
-//        return eventRepository.findEventByCreatedUserId(userId, pageable)
-//                .orElse(Collections.emptyList());
-
-        return null;
+        List<Event> eventList = eventRepository.findEventByCreatedUserId(userId, pageable)
+                .orElse(Collections.emptyList());
+        if (eventList.isEmpty()) {
+            return Collections.emptyList();
+        } else {
+            return EventMapper.listEventToListEventShortDto(eventList);
+        }
     }
 
     @Transactional(rollbackOn = Exception.class)
@@ -89,7 +109,9 @@ public class EventService {
 
         Event createdEvent = EventMapper.newEventDtoToEvent(newEventDto, user, category);
         createdEvent.setConfirmedRequests(0L);
+        createdEvent.setPublishedOn(LocalDateTime.now());
         createdEvent.setState(StateEvent.PENDING.toString());
+        createdEvent.setViews(0L);
 
         eventRepository.save(createdEvent);
         return EventMapper.eventToEventFullDto(createdEvent);
@@ -188,54 +210,92 @@ public class EventService {
         Pageable pageable = PageRequest.of((from / size), size);
 
 
-        // настройка бинов
-//        return eventRepository.findEventFullWhitParametersByAdmin(users, states, categories, rangeStart, rangeEnd, pageable)
-//                .orElse(Collections.emptyList());
-
-        return null;
-
-
+        List<Event> eventList = eventRepository.findEventWhitParametersByAdmin(users, states, categories, rangeStart, rangeEnd, pageable)
+                .orElse(Collections.emptyList());
+        if (eventList.isEmpty()) {
+            return Collections.emptyList();
+        } else {
+            return EventMapper.listEventToListEventFullDto(eventList);
+        }
     }
 
     @Transactional(rollbackOn = Exception.class)
     public EventFullDto updateEventsByAdmin(UpdateEventAdminRequest updateEventAdminRequest, Long eventId) {
 
-        if(updateEventAdminRequest.getEventDate().plusHours(1).isBefore(LocalDateTime.now())) {
-            throw new DataIntegrityViolationException("Date of update Events is too early");
-        }
         Event event = checkEventById(eventId);
+
+        if (updateEventAdminRequest.getEventDate() != null) {
+            if (updateEventAdminRequest.getEventDate().plusHours(1).isBefore(LocalDateTime.now())) {
+                throw new DataIntegrityViolationException("Date of update Events is too early");
+            }
+            event.setEventDate(updateEventAdminRequest.getEventDate());
+        }
+
         if (event.getState().equals(StateEvent.PUBLISHED.toString())) {
             throw new DataIntegrityViolationException("Cannot publish the event because " +
                     "it's not in the right state: PUBLISHED");
         }
-        if (updateEventAdminRequest.getStateAction().equals(StateActionByAdmin.REJECT_EVENT.toString())
-                && event.getState().equals(StateEvent.PUBLISHED.toString())) {
-            throw new DataIntegrityViolationException("Event already PUBLISHED");
+        if (updateEventAdminRequest.getStateAction() != null) {
+            if (updateEventAdminRequest.getStateAction().equals(StateActionByAdmin.REJECT_EVENT.toString())
+                    && event.getState().equals(StateEvent.PUBLISHED.toString())) {
+                throw new DataIntegrityViolationException("Event already PUBLISHED");
+            }
+            if (updateEventAdminRequest.getStateAction().equals(StateActionByAdmin.PUBLISH_EVENT.toString())) {
+                event.setState(StateEvent.PUBLISHED.toString());
+            }
+            if (updateEventAdminRequest.getStateAction().equals(StateActionByAdmin.REJECT_EVENT.toString())) {
+                event.setState(StateEvent.CANCELED.toString());  // ?? не точно еще что такой статус
+            }
         }
-        event.setAnnotation(updateEventAdminRequest.getAnnotation());
-        event.setCategory(categoryRepository.findById(updateEventAdminRequest.getCategory()).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                "The required object was not found.",
-                "Category with id=" + updateEventAdminRequest.getCategory() + " was not found",
-                LocalDateTime.now())));
+        if (updateEventAdminRequest.getCategory() != null) {
+            event.setCategory(categoryRepository.findById(updateEventAdminRequest.getCategory()).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
+                    "The required object was not found.",
+                    "Category with id=" + updateEventAdminRequest.getCategory() + " was not found",
+                    LocalDateTime.now())));
+        }
+        if (updateEventAdminRequest.getAnnotation() != null) {
+            event.setAnnotation(updateEventAdminRequest.getAnnotation());
+        }
+        if (updateEventAdminRequest.getDescription() != null) {
+            event.setDescription(updateEventAdminRequest.getDescription());
+        }
+        if (updateEventAdminRequest.getLocation() != null) {
+            event.setLon(updateEventAdminRequest.getLocation().getLon());
+            event.setLat(updateEventAdminRequest.getLocation().getLat());
+        }
+        if (updateEventAdminRequest.isPaid()) {
+            if (!event.isPaid()) {
+                event.setPaid(updateEventAdminRequest.isPaid());
+            }
+        } else {
+            if (event.isPaid()) {
+                event.setPaid(updateEventAdminRequest.isPaid());
+            }
+        }
 
-        event.setDescription(updateEventAdminRequest.getDescription());
-        event.setEventDate(updateEventAdminRequest.getEventDate());
-        event.setLat(updateEventAdminRequest.getLocation().getLat());
-        event.setLon(updateEventAdminRequest.getLocation().getLon());
-        event.setPaid(updateEventAdminRequest.isPaid());
-        event.setParticipantLimit(updateEventAdminRequest.getParticipantLimit());
-        event.setRequestModeration(updateEventAdminRequest.isRequestModeration());
-        event.setState(updateEventAdminRequest.getStateAction());
-        event.setTitle(updateEventAdminRequest.getTitle());
+        if (updateEventAdminRequest.getParticipantLimit() != null) {
+            event.setParticipantLimit(updateEventAdminRequest.getParticipantLimit());
+        }
+        if (updateEventAdminRequest.isRequestModeration()) {
+            if (!event.isRequestModeration()) {
+                event.setPaid(updateEventAdminRequest.isRequestModeration());
+            }
+        } else {
+            if (event.isRequestModeration()) {
+                event.setPaid(updateEventAdminRequest.isRequestModeration());
+            }
+        }
 
+        if (updateEventAdminRequest.getTitle() != null) {
+            event.setTitle(updateEventAdminRequest.getTitle());
+        }
         eventRepository.save(event);
-
         return EventMapper.eventToEventFullDto(event);
     }
 
 
     private void checkDataTime(LocalDateTime eventDate) {
-        if (eventDate.plusHours(2).isAfter(LocalDateTime.now())) {
+        if (eventDate.plusHours(2).isBefore(LocalDateTime.now())) {
             throw new DataIntegrityViolationException("Field: eventDate. Error: должно содержать дату, которая еще " +
                     "не наступила. Value: " + eventDate);
         }

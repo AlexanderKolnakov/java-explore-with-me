@@ -49,10 +49,13 @@ public class Event {
     @JoinColumn(name = "USER_ID")
     private UserDto initiator; // Пользователь (краткая информация)
 
+    @Column(name = "LAT")
     private float lat;   // Широта
 
+    @Column(name = "LON")
     private float lon;   // Долгота
 
+    @Column(name = "PAID")
     private boolean paid;   // Нужно ли оплачивать участие
 
     @Column(name = "PARTICIPANT_LIMIT")
@@ -68,7 +71,9 @@ public class Event {
     @Column(name = "EVENTS_STATE")
     private String state;   // Список состояний жизненного цикла события
 
+    @Column(name = "TITLE")
     private String title;   // Заголовок
 
-    private String views;   // Количество просмотрев события
+    @Column(name = "VIEWS")
+    private Long views;   // Количество просмотрев события
 }

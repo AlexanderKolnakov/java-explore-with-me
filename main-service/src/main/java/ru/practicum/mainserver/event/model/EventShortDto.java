@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import org.springframework.stereotype.Component;
 import ru.practicum.mainserver.category.models.CategoryDto;
+import ru.practicum.mainserver.user.models.UserDto;
 import ru.practicum.mainserver.user.models.UserShortDto;
 
 import javax.persistence.Entity;
@@ -37,5 +38,5 @@ public class EventShortDto {
 
     private String title;   // Заголовок
 
-    private String views;   // Количество просмотрев события
+    private Long views;   // Количество просмотрев события
 }

@@ -53,5 +53,5 @@ public class EventFullDto {
 
     private String title;   // Заголовок
 
-    private String views;   // Количество просмотрев события
+    private Long views;   // Количество просмотрев события
 }

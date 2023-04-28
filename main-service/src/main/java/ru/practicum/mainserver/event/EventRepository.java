@@ -3,6 +3,7 @@ package ru.practicum.mainserver.event;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.practicum.mainserver.event.model.Event;
 import ru.practicum.mainserver.event.model.EventFullDto;
 import ru.practicum.mainserver.event.model.EventShortDto;
@@ -13,36 +14,53 @@ import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
 
-//    @Query("select e from Event e " +
-//            "where e.initiator.id =? 1")
-//    List<Event> findEventByCreatedUserId(Long userId, Pageable pageable);
+    @Query("select e from Event e " +
+            "where e.initiator.id =? 1")
+    Optional<List<Event>> findEventByCreatedUserId(Long userId, Pageable pageable);
 
-//    @Query("select EventShortDto(e.annotation, e.category, e.confirmedRequests, " +
-//            "e.eventDate, UserShortDto(e.initiator.id , e.initiator.name), " +
-//            "e.paid, e.title, e.views) from Event e " +
-//            "where e.initiator.id =? 1")
-//    Optional<List<EventShortDto>> findEventByCreatedUserId(Long userId, Pageable pageable);
-
-
-    @Query("select e.id, e.annotation, e.category, e.confirmedRequests, e.createdOn, e.description, e.eventDate, " +
-            "e.initiator, new ru.practicum.mainserver.event.model.Location(e.lat, e.lon), e.paid, e.participantLimit, " +
-            "e. publishedOn, e.requestModeration, e.state, e.title, e.views " +
-            "from Event e " +
-            "where e.eventDate > ?4 and e.eventDate < ?5 and e.initiator.id in (:users) " +
-            "and e.state in (:states) and e.category.id in (:categories)")
-    Optional<List<EventFullDto>> findEventFullWhitParametersByAdmin(List<Long> users, List<String> states,
-                                                                   List<Long> categories, LocalDateTime rangeStart,
-                                                                   LocalDateTime rangeEnd, Pageable pageable);
+    @Query("select e from Event e " +
+            "where e.eventDate between :rangeStart and :rangeEnd " +
+            "and e.initiator.id in (:users) " +
+            "and e.state in (:states) " +
+            "and e.category.id in (:categories)")
+    Optional<List<Event>> findEventWhitParametersByAdmin(@Param("users") List<Long> users,
+                                                         @Param("states") List<String> states,
+                                                         @Param("categories") List<Long> categories,
+                                                         @Param("rangeStart") LocalDateTime rangeStart,
+                                                         @Param("rangeEnd") LocalDateTime rangeEnd,
+                                                         Pageable pageable);
 
 
 
-//    @Query("select e.id, e.annotation, e.category, e.confirmedRequests, e.createdOn, e.description, e.eventDate, " +
-//            "e.initiator, new ru.practicum.mainserver.event.model.Location(e.lat, e.lon), e.paid, e.participantLimit, " +
-//            "e. publishedOn, e.requestModeration, e.state, e.title, e.views " +
-//            "from Event e " +
-//            "where e.eventDate > ?4 and e.eventDate < ?5 and e.initiator.id in (:users) " +
-//            "and e.state in (:states) and e.category.id in (:categories)")
-//    Optional<List<EventFullDto>> findEventFullWhitParametersByAdmin(List<Long> users, List<String> states,
-//                                                                    List<Long> categories, LocalDateTime rangeStart,
-//                                                                    LocalDateTime rangeEnd, Pageable pageable);
-//}
+    @Query("select e from Event e " +
+            "where e.eventDate between :rangeStart and :rangeEnd " +
+            "and  e.state in :state " +
+            "and e.category.id in :categories " +
+            "and e.paid in :paid " +
+            "and upper(e.annotation) like  upper(concat('%', :text, '%')) " +
+            " or upper(e.description) like upper(concat('%', :text, '%'))")
+    Optional<List<Event>> findPublicEventWhitParametersByUser(@Param("rangeStart") LocalDateTime rangeStart,
+                                                              @Param("rangeEnd") LocalDateTime rangeEnd,
+                                                              @Param("state") String state,
+                                                              @Param("categories") Long categories,
+                                                              @Param("paid") Boolean paid,
+                                                              @Param("text") String text,
+                                                              Pageable pageable);
+
+
+    @Query("select e from Event e " +
+            "where e.eventDate between :rangeStart and :rangeEnd " +
+            "and  e.state in :state " +
+            "and e.category.id in :categories " +
+            "and e.paid in :paid " +
+            "and upper(e.annotation) like  upper(concat('%', :text, '%')) " +
+            " or upper(e.description) like upper(concat('%', :text, '%'))" +
+            "and e.participantLimit > e.confirmedRequests")
+    Optional<List<Event>> findPublicEventWhitParametersByUserWhereEventAvailable(@Param("rangeStart") LocalDateTime rangeStart,
+                                                                                 @Param("rangeEnd") LocalDateTime rangeEnd,
+                                                                                 @Param("state") String state,
+                                                                                 @Param("categories") Long categories,
+                                                                                 @Param("paid") Boolean paid,
+                                                                                 @Param("text") String text,
+                                                                                 Pageable pageable);
+}
