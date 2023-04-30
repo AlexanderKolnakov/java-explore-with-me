@@ -5,8 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.practicum.mainserver.event.model.Event;
-import ru.practicum.mainserver.event.model.EventFullDto;
-import ru.practicum.mainserver.event.model.EventShortDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -68,4 +66,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "where e.id =? 1 " +
             "and e.state =? 2 ")
     Event findPublishedEventById(Long id, String state);
+
+    @Query("select e from Event e " +
+            "where e.category.id =? 1")
+    Optional<List<Event>> findByCategory(Long catId);
 }

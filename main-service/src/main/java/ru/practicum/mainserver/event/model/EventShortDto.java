@@ -3,12 +3,9 @@ package ru.practicum.mainserver.event.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-import org.springframework.stereotype.Component;
 import ru.practicum.mainserver.category.models.CategoryDto;
-import ru.practicum.mainserver.user.models.UserDto;
 import ru.practicum.mainserver.user.models.UserShortDto;
 
-import javax.persistence.Entity;
 import java.time.LocalDateTime;
 
 @Getter

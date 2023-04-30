@@ -6,8 +6,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainserver.event.model.*;
-import ru.practicum.mainserver.event.model.EventRequestStatusUpdateRequest;
-import ru.practicum.mainserver.event.model.EventRequestStatusUpdateResult;
 import ru.practicum.mainserver.participationReques.model.ParticipationRequestDto;
 
 import javax.validation.Valid;
@@ -24,13 +22,13 @@ public class EventController {
 
     @GetMapping("/events")
     public List<EventShortDto> getEvents(
-            @RequestParam String text,
-            @RequestParam Long categories,
-            @RequestParam("paid") Boolean paid,
+            @RequestParam(required = false) String text,
+            @RequestParam(required = false) Long categories,
+            @RequestParam(name = "paid", required = false) Boolean paid,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
-            @RequestParam("onlyAvailable") Boolean onlyAvailable,
-            @RequestParam String sort,
+            @RequestParam(name = "onlyAvailable", required = false, defaultValue = "false") Boolean onlyAvailable,
+            @RequestParam(required = false, defaultValue = "EVENT_DATE") String sort,
             @RequestParam(name = "from", defaultValue = "0") int from,
             @RequestParam(name = "size", defaultValue = "10") int size) {
         log.info("Получен GET запрос на получение списка событий по параметрам");
@@ -94,16 +92,16 @@ public class EventController {
             @PathVariable Long userId,
             @PathVariable Long eventId,
             @RequestBody  EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest) {
-        log.debug("Получен PATCH запрос на обновление информации о событии с id " + eventId + ", " +
+        log.debug("Получен PATCH запрос на обновление информации о заявке на участие в событии с id " + eventId + ", " +
                 "добавленной пользователем c id - " + userId);
         return eventService.updateEventRequestStatusByUserId(eventRequestStatusUpdateRequest, userId, eventId);
     }
 
     @GetMapping("/admin/events")
     public List<EventFullDto> getEventsByAdmin(
-            @RequestParam List<Long> users,
-            @RequestParam List<String> states,
-            @RequestParam List<Long> categories,
+            @RequestParam(required = false) List<Long> users,
+            @RequestParam(required = false) List<String> states,
+            @RequestParam(required = false) List<Long> categories,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
             @RequestParam(name = "from", defaultValue = "0") int from,

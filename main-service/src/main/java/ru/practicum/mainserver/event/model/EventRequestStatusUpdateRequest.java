@@ -3,8 +3,6 @@ package ru.practicum.mainserver.event.model;
 
 import lombok.*;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Getter

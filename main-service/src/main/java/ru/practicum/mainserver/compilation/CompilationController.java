@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainserver.compilation.models.CompilationDto;
 import ru.practicum.mainserver.compilation.models.NewCompilationDto;
 import ru.practicum.mainserver.compilation.models.UpdateCompilationRequest;
-import ru.practicum.mainserver.event.model.EventShortDto;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -37,7 +37,7 @@ public class CompilationController {
 
     @PostMapping("/admin/compilations")
     @ResponseStatus(HttpStatus.CREATED)
-    public CompilationDto createCompilation(@RequestBody NewCompilationDto newCompilationDto) {
+    public CompilationDto createCompilation(@RequestBody @Valid NewCompilationDto newCompilationDto) {
         log.info("ADMIN. Получен POST запрос на создание подборки событий");
         return compilationService.createCompilation(newCompilationDto);
     }

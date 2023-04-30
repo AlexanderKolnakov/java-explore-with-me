@@ -35,6 +35,7 @@ public class ErrorHandler {
                 e.getMessage(),
                 LocalDateTime.now());
     }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(value = HttpStatus.CONFLICT)
     public ApiError error409(final DataIntegrityViolationException e) {

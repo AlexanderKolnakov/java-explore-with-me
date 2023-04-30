@@ -3,13 +3,11 @@ package ru.practicum.mainserver.event;
 import org.springframework.stereotype.Component;
 import ru.practicum.mainserver.category.models.CategoryDto;
 import ru.practicum.mainserver.event.model.*;
-import ru.practicum.mainserver.user.models.NewUserRequest;
 import ru.practicum.mainserver.user.models.UserDto;
 import ru.practicum.mainserver.user.models.UserShortDto;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 @Component
@@ -50,9 +48,7 @@ public class EventMapper {
         eventFullDto.setLocation(new Location(createdEvent.getLat(), createdEvent.getLon()));
         eventFullDto.setPaid(createdEvent.isPaid());
         eventFullDto.setParticipantLimit(createdEvent.getParticipantLimit());
-
-        eventFullDto.setPublishedOn(createdEvent.getPublishedOn());  // ???
-
+        eventFullDto.setPublishedOn(createdEvent.getPublishedOn());
         eventFullDto.setRequestModeration(createdEvent.isRequestModeration());
         eventFullDto.setState(createdEvent.getState());
         eventFullDto.setTitle(createdEvent.getTitle());
@@ -64,13 +60,13 @@ public class EventMapper {
     public static List<EventShortDto> listEventToListEventShortDto(List<Event> eventList) {
         List<EventShortDto> resultList = new ArrayList<>();
 
-        for (Event event: eventList) {
+        for (Event event : eventList) {
             resultList.add(eventToEventShortDto(event));
         }
         return resultList;
     }
 
-    public static EventShortDto eventToEventShortDto (Event event) {
+    public static EventShortDto eventToEventShortDto(Event event) {
         EventShortDto eventShortDto = new EventShortDto();
 
         eventShortDto.setAnnotation(event.getAnnotation());
@@ -90,7 +86,7 @@ public class EventMapper {
     public static List<EventFullDto> listEventToListEventFullDto(List<Event> eventList) {
         List<EventFullDto> eventFullDtoList = new ArrayList<>();
 
-        for (Event event: eventList) {
+        for (Event event : eventList) {
             eventFullDtoList.add(eventToEventFullDto(event));
         }
         return eventFullDtoList;

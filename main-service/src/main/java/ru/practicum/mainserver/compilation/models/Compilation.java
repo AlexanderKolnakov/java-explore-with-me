@@ -2,11 +2,8 @@ package ru.practicum.mainserver.compilation.models;
 
 
 import lombok.*;
-import ru.practicum.mainserver.event.model.Event;
-import ru.practicum.mainserver.event.model.EventShortDto;
 
 import javax.persistence.*;
-import java.util.List;
 
 @Getter
 @Setter

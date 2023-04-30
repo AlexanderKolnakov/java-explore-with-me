@@ -9,6 +9,6 @@ import java.util.List;
 public interface CompilationEventRepository extends JpaRepository<CompilationEvent, Long> {
 
     @Query("select ce from CompilationEvent ce " +
-            "where ce.CompilationId =? 1 ")
+            "where ce.compilationId =? 1 ")
     List<CompilationEvent> findByCompilationId(Long id);
 }

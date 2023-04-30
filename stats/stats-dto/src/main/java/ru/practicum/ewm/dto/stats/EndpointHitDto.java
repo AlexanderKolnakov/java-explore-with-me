@@ -14,13 +14,13 @@ import java.time.LocalDateTime;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EndpointHitDto {
 
-    private Long id;
+    private Long id;  // Идентификатор записи
 
-    private String app;
+    private String app;  // Идентификатор сервиса для которого записывается информация (ewm-main-service)
 
-    private String uri;
+    private String uri;   // URI для которого был осуществлен запрос
 
-    private String ip;
+    private String ip;   // IP-адрес пользователя, осуществившего запрос
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;

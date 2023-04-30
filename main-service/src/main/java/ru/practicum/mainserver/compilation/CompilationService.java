@@ -3,18 +3,15 @@ package ru.practicum.mainserver.compilation;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ru.practicum.mainserver.compilation.models.*;
 import ru.practicum.mainserver.event.EventMapper;
 import ru.practicum.mainserver.event.EventRepository;
 import ru.practicum.mainserver.event.model.Event;
 import ru.practicum.mainserver.event.model.EventShortDto;
-import ru.practicum.mainserver.exception.ApiError;
 
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

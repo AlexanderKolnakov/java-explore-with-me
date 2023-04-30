@@ -12,7 +12,7 @@ import javax.validation.constraints.NotBlank;
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "CATEGORYS", uniqueConstraints= @UniqueConstraint(columnNames={"ID", "CATEGORY_NAME"}))
+@Table(name = "CATEGORYS", uniqueConstraints = @UniqueConstraint(columnNames = {"ID", "CATEGORY_NAME"}))
 public class CategoryDto {
 
     // Категория

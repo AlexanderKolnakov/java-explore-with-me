@@ -2,7 +2,6 @@ package ru.practicum.mainserver.event.model;
 
 
 import lombok.*;
-import org.springframework.stereotype.Component;
 
 
 @Getter
