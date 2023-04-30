@@ -22,7 +22,7 @@ public class CompilationController {
 
     @GetMapping("/compilations")
     public List<CompilationDto> getCompilation(
-            @RequestParam boolean pinned,
+            @RequestParam(required = false) boolean pinned,
             @RequestParam(name = "from", defaultValue = "0") int from,
             @RequestParam(name = "size", defaultValue = "10") int size) {
         log.info("Получен GET запрос на получение списка подборок событий, с флагом о закрепленности - " + pinned);
@@ -38,21 +38,21 @@ public class CompilationController {
     @PostMapping("/admin/compilations")
     @ResponseStatus(HttpStatus.CREATED)
     public CompilationDto createCompilation(@RequestBody NewCompilationDto newCompilationDto) {
-        log.debug("ADMIN. Получен POST запрос на создание подборки событий");
+        log.info("ADMIN. Получен POST запрос на создание подборки событий");
         return compilationService.createCompilation(newCompilationDto);
     }
 
     @DeleteMapping("/admin/compilations/{compId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCompilation(@PathVariable Long compId) {
-        log.debug("ADMIN. Получен DELETE запрос на удаление подборки событий с id: {}.", compId);
+        log.info("ADMIN. Получен DELETE запрос на удаление подборки событий с id: {}.", compId);
         compilationService.deleteCompilation(compId);
     }
 
     @PatchMapping("/admin/compilations/{compId}")
     public CompilationDto updateCompilation(
             @PathVariable Long compId, @RequestBody UpdateCompilationRequest updateCompilationRequest) {
-        log.debug("ADMIN. Получен PATCH запрос на обновление информации о подборки событий с id: " + compId);
+        log.info("ADMIN. Получен PATCH запрос на обновление информации о подборки событий с id: " + compId);
         return compilationService.updateCompilation(compId, updateCompilationRequest);
     }
 }

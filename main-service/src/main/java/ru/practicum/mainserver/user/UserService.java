@@ -4,16 +4,12 @@ import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import ru.practicum.mainserver.exception.ApiError;
 import ru.practicum.mainserver.user.models.NewUserRequest;
 import ru.practicum.mainserver.user.models.UserDto;
 
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -25,10 +21,7 @@ public class UserService {
     public List<UserDto> getUsersByAdmin(List<Long> ids, int from, int size) {
 
         Pageable pageable = PageRequest.of((from / size), size);
-
-        List<UserDto> resultList = userRepository.findAllByOwner(ids, pageable);
-
-        return resultList;
+        return userRepository.findAllByOwner(ids, pageable);
     }
 
     @Transactional(rollbackOn = Exception.class)
@@ -46,11 +39,7 @@ public class UserService {
     public void deleteUserById(Long userId) {
 
         userRepository.findById(userId)
-                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                        "The required object was not found.",
-                        "User with id=" + userId + " was not found",
-                        LocalDateTime.now()));
-
+                .orElseThrow(() -> new EntityNotFoundException("User with id=" + userId + " was not found"));
         userRepository.deleteById(userId);
     }
 }

@@ -8,7 +8,6 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.client.HttpServerErrorException;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
@@ -27,13 +26,15 @@ public class ErrorHandler {
                 LocalDateTime.now());
     }
 
-//    @ExceptionHandler({EntityNotFoundException.class})
-//    @ResponseStatus(value = HttpStatus.NOT_FOUND)
-//    public String error404(final EntityNotFoundException e) {
-//        log.info("404 {}", e.getMessage());
-//        return e.getMessage();
-//    }
-//
+    @ExceptionHandler(EntityNotFoundException.class)
+    @ResponseStatus(value = HttpStatus.NOT_FOUND)
+    public ApiError error404(final EntityNotFoundException e) {
+        log.info("404 {}", e.getMessage());
+        return new ApiError(HttpStatus.NOT_FOUND.toString(),
+                "The required object was not found.",
+                e.getMessage(),
+                LocalDateTime.now());
+    }
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(value = HttpStatus.CONFLICT)
     public ApiError error409(final DataIntegrityViolationException e) {
@@ -44,13 +45,13 @@ public class ErrorHandler {
                 LocalDateTime.now());
     }
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiError error500(final EntityNotFoundException e) {
-        log.info("500 {}", e.getMessage());
-        return new ApiError(HttpStatus.INTERNAL_SERVER_ERROR.toString(),
-                "Incorrectly made request.",
-                e.getMessage(),
-                LocalDateTime.now());
-    }
+//    @ExceptionHandler(EntityNotFoundException.class)
+//    @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
+//    public ApiError error500(final EntityNotFoundException e) {
+//        log.info("500 {}", e.getMessage());
+//        return new ApiError(HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+//                "Incorrectly made request.",
+//                e.getMessage(),
+//                LocalDateTime.now());
+//    }
 }

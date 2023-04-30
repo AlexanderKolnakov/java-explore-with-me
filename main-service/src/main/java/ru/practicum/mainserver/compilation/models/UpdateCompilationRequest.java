@@ -5,12 +5,7 @@ import lombok.*;
 
 import java.util.List;
 
-@Getter
-@Setter
-@ToString
-@RequiredArgsConstructor
-@AllArgsConstructor
-public class UpdateCompilationRequest {
+public class UpdateCompilationRequest extends CompilationParent{
 
     // Изменение информации о подборке событий.
 

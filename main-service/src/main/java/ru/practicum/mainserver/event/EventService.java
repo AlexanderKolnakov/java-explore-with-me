@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ru.practicum.mainserver.category.CategoryRepository;
 import ru.practicum.mainserver.category.CategoryService;
@@ -15,13 +14,13 @@ import ru.practicum.mainserver.event.enums.StateActionByAdmin;
 import ru.practicum.mainserver.event.enums.StateActionByUser;
 import ru.practicum.mainserver.event.enums.StateEvent;
 import ru.practicum.mainserver.event.model.*;
-import ru.practicum.mainserver.exception.ApiError;
 import ru.practicum.mainserver.participationReques.ParticipationRequestRepository;
 import ru.practicum.mainserver.participationReques.enums.StatusRequest;
 import ru.practicum.mainserver.participationReques.model.ParticipationRequestDto;
 import ru.practicum.mainserver.user.UserRepository;
 import ru.practicum.mainserver.user.models.UserDto;
 
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -84,11 +83,7 @@ public class EventService {
                 .findPublishedEventById(id, StateEvent.PUBLISHED.toString()));
 
 
-
-
-
         // НУЖНО ПОДКЛЮЧИТЬ СЕРВИС СТАТИСТИКИ
-
 
 
     }
@@ -135,40 +130,40 @@ public class EventService {
         checkUserById(userId);
         Event event = checkEventById(eventId);
 
-        if(updateEventUserRequest.getCategory() != null) {
+        if (updateEventUserRequest.getCategory() != null) {
             CategoryDto category = checkCategoryById(updateEventUserRequest.getCategory());
             event.setCategory(category);
         }
         if (event.getState().equals(StateEvent.PENDING.toString())
                 || event.getState().equals(StateEvent.CANCELED.toString())) {
 
-            if(updateEventUserRequest.getAnnotation() != null) {
+            if (updateEventUserRequest.getAnnotation() != null) {
                 event.setAnnotation(updateEventUserRequest.getAnnotation());
             }
-            if(updateEventUserRequest.getDescription() != null) {
+            if (updateEventUserRequest.getDescription() != null) {
                 event.setDescription(updateEventUserRequest.getDescription());
             }
-            if(updateEventUserRequest.getEventDate() != null) {
+            if (updateEventUserRequest.getEventDate() != null) {
                 event.setEventDate(updateEventUserRequest.getEventDate());
             }
-            if(updateEventUserRequest.getLocation() != null) {
+            if (updateEventUserRequest.getLocation() != null) {
                 event.setLat(updateEventUserRequest.getLocation().getLat());
                 event.setLon(updateEventUserRequest.getLocation().getLon());
             }
-            if(updateEventUserRequest.getParticipantLimit() != null) {
+            if (updateEventUserRequest.getParticipantLimit() != null) {
                 event.setParticipantLimit(updateEventUserRequest.getParticipantLimit());
             }
-            if(updateEventUserRequest.getStateAction() != null) {
-                if(updateEventUserRequest.getStateAction()
+            if (updateEventUserRequest.getStateAction() != null) {
+                if (updateEventUserRequest.getStateAction()
                         .equals(StateActionByUser.CANCEL_REVIEW.toString())) {
                     event.setState(StateEvent.CANCELED.toString());
                 }
-                if(updateEventUserRequest.getStateAction()
+                if (updateEventUserRequest.getStateAction()
                         .equals(StateActionByUser.SEND_TO_REVIEW.toString())) {
                     event.setState(StateEvent.PENDING.toString());
                 }
             }
-            if(updateEventUserRequest.getTitle() != null) {
+            if (updateEventUserRequest.getTitle() != null) {
                 event.setTitle(updateEventUserRequest.getTitle());
             }
 
@@ -193,7 +188,7 @@ public class EventService {
     public List<ParticipationRequestDto> getParticipationRequestByUserId(Long userId, Long eventId) {
 
         Event event = eventRepository.findById(eventId).get();
-        if(!Objects.equals(event.getInitiator().getId(), userId)) {
+        if (!Objects.equals(event.getInitiator().getId(), userId)) {
             return Collections.emptyList();
         }
         return participationRequestRepository.findByEventId(eventId);
@@ -217,13 +212,12 @@ public class EventService {
 
             for (Long requestId : eventRequestStatusUpdateRequest.getRequestIds()) {
 
-                ParticipationRequestDto requestDto = participationRequestRepository.findById(requestId).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                        "The required object was not found.",
-                        "Participation Request with id=" + requestId + " was not found",
-                        LocalDateTime.now()));
+                ParticipationRequestDto requestDto = participationRequestRepository
+                        .findById(requestId).orElseThrow(() -> new EntityNotFoundException("Participation Request with id=" +
+                                requestId + " was not found"));
                 requestDto.setStatus(StatusRequest.CONFIRMED.toString());  // мб тут поправить
                 participationRequestRepository.save(requestDto);
-                confirmedRequests ++;
+                confirmedRequests++;
                 resultList.add(requestDto);
             }
             event.setConfirmedRequests(confirmedRequests);
@@ -234,16 +228,15 @@ public class EventService {
         for (Long requestId : eventRequestStatusUpdateRequest.getRequestIds()) {
 
             ParticipationRequestDto participationRequest = participationRequestRepository
-                    .findById(requestId).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                    "The required object was not found.",
-                    "Participation Request with id=" + requestId + " was not found",
-                    LocalDateTime.now()));
+                    .findById(requestId)
+                    .orElseThrow(() -> new EntityNotFoundException("Participation Request with id=" + requestId +
+                            " was not found"));
             participationRequest.setStatus(eventRequestStatusUpdateRequest.getStatus());  // мб тут поправить
             participationRequestRepository.save(participationRequest);
             resultList.add(participationRequest);
             if (eventRequestStatusUpdateRequest.getStatus().equals(StatusRequest.CONFIRMED.toString())) {
-                confirmedRequests ++;
-                if(confirmedRequests >= limitRequests) {
+                confirmedRequests++;
+                if (confirmedRequests >= limitRequests) {
                     eventRequestStatusUpdateRequest.setStatus(StatusRequest.REJECTED.toString());
                 }
             }
@@ -298,10 +291,9 @@ public class EventService {
             }
         }
         if (updateEventAdminRequest.getCategory() != null) {
-            event.setCategory(categoryRepository.findById(updateEventAdminRequest.getCategory()).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                    "The required object was not found.",
-                    "Category with id=" + updateEventAdminRequest.getCategory() + " was not found",
-                    LocalDateTime.now())));
+            event.setCategory(categoryRepository.findById(updateEventAdminRequest.getCategory())
+                    .orElseThrow(() -> new EntityNotFoundException("Category with id=" +
+                            +updateEventAdminRequest.getCategory() + " was not found")));
         }
         if (updateEventAdminRequest.getAnnotation() != null) {
             event.setAnnotation(updateEventAdminRequest.getAnnotation());
@@ -342,35 +334,27 @@ public class EventService {
     }
 
     private UserDto checkUserById(Long userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                "The required object was not found.",
-                "User with id=" + userId + " was not found",
-                LocalDateTime.now()));
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User with id=" + userId + " was not found"));
     }
 
     private Event checkEventById(Long eventId) {
-        return eventRepository.findById(eventId).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                "The required object was not found.",
-                "Event with id=" + eventId + " was not found",
-                LocalDateTime.now()));
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event with id=" + eventId + " was not found"));
     }
 
     private EventFullDto checkEventInitiator(Event event, Long userId) {
         if (event.getInitiator().getId().equals(userId)) {
             return EventMapper.eventToEventFullDto(event);
         } else {
-            throw new ApiError(HttpStatus.NOT_FOUND.toString(),
-                    "The required object was not found.",
-                    "User with id=" + userId + " does not have event whit id= " + event.getId(),
-                    LocalDateTime.now());
+            throw new EntityNotFoundException("User with id=" + userId +
+                    " does not have event whit id= " + event.getId());
         }
     }
 
     private CategoryDto checkCategoryById(Long categoryId) {
-        return categoryRepository.findById(categoryId).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                "The required object was not found.",
-                "Category with id=" + categoryId + " was not found",
-                LocalDateTime.now()));
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Category with id=" + categoryId + " was not found"));
     }
 
     private void checkEventParticipantLimit(Event event) {

@@ -1,6 +1,8 @@
 package ru.practicum.mainserver.compilation;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ru.practicum.mainserver.compilation.models.*;
@@ -10,9 +12,11 @@ import ru.practicum.mainserver.event.model.Event;
 import ru.practicum.mainserver.event.model.EventShortDto;
 import ru.practicum.mainserver.exception.ApiError;
 
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -24,34 +28,22 @@ public class CompilationService {
     private final CompilationEventRepository compilationEventRepository;
 
     public List<CompilationDto> getCompilation(boolean pinned, int from, int size) {
-        return null;
+
+        Pageable pageable = PageRequest.of((from / size), size);
+        List<Compilation> compilation = compilationRepository.findCompilationByPinned(pinned, pageable)
+                .orElse(Collections.emptyList());
+
+        List<CompilationDto> resultList = new ArrayList<>();
+
+        for (Compilation comp : compilation) {
+            resultList.add(compilationToDto(comp));
+        }
+        return resultList;
     }
 
     public CompilationDto getCompilationById(Long compId) {
-        Compilation compilation = compilationRepository.findById(compId).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                "The required object was not found.",
-                "Compilation with id=" + compId + " was not found",
-                LocalDateTime.now()));
-        List<CompilationEvent> compilationEvent = compilationEventRepository
-                .findByCompilationId(compilation.getId());
-
-        List<EventShortDto> events = new ArrayList<>();
-
-        for (CompilationEvent comEvent : compilationEvent) {
-            events.add(EventMapper.eventToEventShortDto(eventRepository
-                    .findById(comEvent.getEventId()).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                    "The required object was not found.",
-                    "Event with id=" + compId + " was not found",
-                    LocalDateTime.now()))));
-        }
-
-        CompilationDto compilationDto = new CompilationDto();
-        compilationDto.setId(compilation.getId());
-        compilationDto.setTitle(compilation.getTitle());
-        compilationDto.setPinned(compilation.isPinned());
-        compilationDto.setEvents(events);
-
-        return compilationDto;
+        Compilation compilation = checkCompilation(compId);
+        return compilationToDto(compilation);
     }
 
     @Transactional(rollbackOn = Exception.class)
@@ -64,7 +56,85 @@ public class CompilationService {
         compilation.setTitle(newCompilationDto.getTitle());
         Compilation savedCompilation = compilationRepository.save(compilation);
 
-        for (Long eventId : newCompilationDto.getEvents()) {
+        return saveCompilationRequests(newCompilationDto, savedCompilation, eventList);
+    }
+
+
+    @Transactional(rollbackOn = Exception.class)
+    public void deleteCompilation(Long compId) {
+        checkCompilation(compId);
+        List<CompilationEvent> listByDelete = compilationEventRepository.findByCompilationId(compId);
+        for (CompilationEvent compEvent : listByDelete) {
+            compilationEventRepository.deleteById(compEvent.getId());
+        }
+        compilationRepository.deleteById(compId);
+    }
+
+
+    @Transactional(rollbackOn = Exception.class)
+    public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest updateCompilationRequest) {
+
+        Compilation compilation = checkCompilation(compId);
+        List<Event> eventList = checkEvents(updateCompilationRequest.getEvents());
+
+        compilation.setPinned(updateCompilationRequest.isPinned());
+        if (updateCompilationRequest.getTitle() != null) {
+            compilation.setTitle(updateCompilationRequest.getTitle());
+        }
+        List<CompilationEvent> compilationEventList = compilationEventRepository.findByCompilationId(compId);
+
+        Compilation savedCompilation = compilationRepository.save(compilation);
+
+
+        for (CompilationEvent compEvent : compilationEventList) {
+            compilationEventRepository.deleteById(compEvent.getId());
+        }
+
+
+        // TYT updateCompilation
+        return saveCompilationRequests(updateCompilationRequest, savedCompilation, eventList);
+    }
+
+
+    private List<Event> checkEvents(List<Long> events) {
+        List<Event> resultList = new ArrayList<>();
+        for (Long eventId : events) {
+            resultList.add(eventRepository.findById(eventId)
+                    .orElseThrow(() -> new EntityNotFoundException("Event with id=" + eventId + " was not found")));
+        }
+        return resultList;
+    }
+
+    private Compilation checkCompilation(Long compId) {
+        return compilationRepository.findById(compId)
+                .orElseThrow(() -> new EntityNotFoundException("Compilation with id=" + compId + " was not found"));
+    }
+
+    private CompilationDto compilationToDto(Compilation compilation) {
+
+        List<CompilationEvent> compilationEvent = compilationEventRepository
+                .findByCompilationId(compilation.getId());
+
+        List<EventShortDto> events = new ArrayList<>();
+
+        for (CompilationEvent comEvent : compilationEvent) {
+            events.add(EventMapper.eventToEventShortDto(eventRepository
+                    .findById(comEvent.getEventId())
+                    .orElseThrow(() -> new EntityNotFoundException("Event with id=" + comEvent.getEventId() +
+                            " was not found"))));
+        }
+
+        CompilationDto compilationDto = new CompilationDto();
+        compilationDto.setId(compilation.getId());
+        compilationDto.setTitle(compilation.getTitle());
+        compilationDto.setPinned(compilation.isPinned());
+        compilationDto.setEvents(events);
+
+        return compilationDto;
+    }
+
+    private CompilationDto saveCompilationRequests(CompilationParent comp, Compilation savedCompilation, List<Event> eventList) {
+        for (Long eventId : comp.getEvents()) {
             CompilationEvent compilationEvent = new CompilationEvent();
             compilationEvent.setEventId(eventId);
             compilationEvent.setCompilationId(savedCompilation.getId());
@@ -78,27 +148,5 @@ public class CompilationService {
         compilationDto.setTitle(savedCompilation.getTitle());
 
         return compilationDto;
-    }
-
-
-    @Transactional(rollbackOn = Exception.class)
-    public void deleteCompilation(Long compId) {
-    }
-
-    @Transactional(rollbackOn = Exception.class)
-    public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest updateCompilationRequest) {
-        return null;
-    }
-
-
-    private List<Event> checkEvents(List<Long> events) {
-        List<Event> resultList = new ArrayList<>();
-        for (Long eventId : events) {
-            resultList.add(eventRepository.findById(eventId).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                    "The required object was not found.",
-                    "Event with id=" + eventId + " was not found",
-                    LocalDateTime.now())));
-        }
-        return resultList;
     }
 }

@@ -2,18 +2,17 @@ package ru.practicum.mainserver.participationReques;
 
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ru.practicum.mainserver.event.EventRepository;
 import ru.practicum.mainserver.event.enums.StateActionByAdmin;
 import ru.practicum.mainserver.event.enums.StateEvent;
 import ru.practicum.mainserver.event.model.Event;
-import ru.practicum.mainserver.exception.ApiError;
 import ru.practicum.mainserver.participationReques.enums.StatusRequest;
 import ru.practicum.mainserver.participationReques.model.ParticipationRequestDto;
 import ru.practicum.mainserver.user.UserRepository;
 import ru.practicum.mainserver.user.models.UserDto;
 
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -45,7 +44,7 @@ public class ParticipationRequestService {
 
         ParticipationRequestDto participationRequest = new ParticipationRequestDto();
 
-        if(!event.isRequestModeration()) {
+        if (!event.isRequestModeration()) {
             participationRequest.setStatus(StatusRequest.CONFIRMED.toString());
         } else {
             participationRequest.setStatus(StatusRequest.PENDING.toString());
@@ -68,17 +67,13 @@ public class ParticipationRequestService {
     }
 
     private UserDto checkUserById(Long userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                "The required object was not found.",
-                "User with id=" + userId + " was not found",
-                LocalDateTime.now()));
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User with id=" + userId + " was not found"));
     }
 
     private Event checkEventById(Long eventId) {
-        return eventRepository.findById(eventId).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                "The required object was not found.",
-                "Event with id=" + eventId + " was not found",
-                LocalDateTime.now()));
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event with id=" + eventId + " was not found"));
     }
 
     private void checkEventInitiator(Event event, Long userId) {
@@ -107,14 +102,13 @@ public class ParticipationRequestService {
         List<ParticipationRequestDto> listRequests = participationRequestRepository.findByEventId(event.getId());
         if (listRequests.size() >= event.getParticipantLimit()) {
             throw new DataIntegrityViolationException("In Event with id=" + event.getId() +
-                    " no free places." );
+                    " no free places.");
         }
     }
 
     private ParticipationRequestDto checkParticipationRequest(Long requestId) {
-        return participationRequestRepository.findById(requestId).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                "The required object was not found.",
-                "ParticipationRequest with id=" + requestId + " was not found",
-                LocalDateTime.now()));
+        return participationRequestRepository.findById(requestId)
+                .orElseThrow(() -> new EntityNotFoundException("ParticipationRequest with id=" + requestId +
+                        " was not found"));
     }
 }

@@ -15,8 +15,6 @@ public class ApiError extends RuntimeException {
 
     // Сведения об ошибке
 
-    //    private String errors;   // Список стектрейсов или описания ошибок
-
     private String status;   // Код статуса HTTP-ответа
 
     private String reason;   // Общее описание причины ошибки

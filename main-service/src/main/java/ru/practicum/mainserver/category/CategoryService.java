@@ -4,14 +4,12 @@ import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ru.practicum.mainserver.category.models.CategoryDto;
 import ru.practicum.mainserver.category.models.NewCategoryDto;
-import ru.practicum.mainserver.exception.ApiError;
 
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -23,10 +21,7 @@ public class CategoryService {
     public CategoryDto getCategoryById(Long catId) {
 
         return categoryRepository.findById(catId)
-                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                        "The required object was not found.",
-                        "Category with id=" + catId + " was not found",
-                        LocalDateTime.now()));
+                .orElseThrow(() -> new EntityNotFoundException("Category with id=" + catId + " was not found"));
     }
 
     public List<CategoryDto> getCategory(int from, int size) {
@@ -53,10 +48,7 @@ public class CategoryService {
     @Transactional(rollbackOn = Exception.class)
     public void deleteCategory(Long catId) {
         categoryRepository.findById(catId)
-                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
-                        "The required object was not found.",
-                        "Category with id=" + catId + " was not found",
-                        LocalDateTime.now()));
+                .orElseThrow(() -> new EntityNotFoundException("Category with id=" + catId + " was not found"));
 
         // + проверка, что с категорией не свзяаны ни одного события.
 

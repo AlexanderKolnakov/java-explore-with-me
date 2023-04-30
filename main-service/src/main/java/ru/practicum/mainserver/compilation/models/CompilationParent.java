@@ -1,14 +1,15 @@
 package ru.practicum.mainserver.compilation.models;
 
-
 import lombok.*;
 
-import javax.persistence.Entity;
 import java.util.List;
 
-public class NewCompilationDto extends CompilationParent{
-
-    // Подборка событий
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
+@AllArgsConstructor
+public class CompilationParent {
 
     private List<Long> events;   // Список идентификаторов событий входящих в подборку
 
