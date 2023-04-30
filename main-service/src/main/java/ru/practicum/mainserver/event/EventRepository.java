@@ -63,4 +63,9 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                                                                                  @Param("paid") Boolean paid,
                                                                                  @Param("text") String text,
                                                                                  Pageable pageable);
+
+    @Query("select e from Event e " +
+            "where e.id =? 1 " +
+            "and e.state =? 2 ")
+    Event findPublishedEventById(Long id, String state);
 }

@@ -23,7 +23,7 @@ public class CategoryService {
     public CategoryDto getCategoryById(Long catId) {
 
         return categoryRepository.findById(catId)
-                .orElseThrow(() -> new ApiError(HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
                         "The required object was not found.",
                         "Category with id=" + catId + " was not found",
                         LocalDateTime.now()));
@@ -50,12 +50,15 @@ public class CategoryService {
         return categoryRepository.save(createdCategory);
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public void deleteCategory(Long catId) {
-        getCategoryById(catId);
-
+        categoryRepository.findById(catId)
+                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
+                        "The required object was not found.",
+                        "Category with id=" + catId + " was not found",
+                        LocalDateTime.now()));
 
         // + проверка, что с категорией не свзяаны ни одного события.
-
 
         categoryRepository.deleteById(catId);
     }

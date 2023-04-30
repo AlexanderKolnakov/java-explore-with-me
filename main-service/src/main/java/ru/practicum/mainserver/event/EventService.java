@@ -12,6 +12,7 @@ import ru.practicum.mainserver.category.CategoryService;
 import ru.practicum.mainserver.category.models.CategoryDto;
 import ru.practicum.mainserver.event.enums.SortEvent;
 import ru.practicum.mainserver.event.enums.StateActionByAdmin;
+import ru.practicum.mainserver.event.enums.StateActionByUser;
 import ru.practicum.mainserver.event.enums.StateEvent;
 import ru.practicum.mainserver.event.model.*;
 import ru.practicum.mainserver.exception.ApiError;
@@ -23,10 +24,7 @@ import ru.practicum.mainserver.user.models.UserDto;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -81,11 +79,17 @@ public class EventService {
     }
 
     public EventFullDto getFullEventsById(Long id) {
+        checkEventById(id);
+        return EventMapper.eventToEventFullDto(eventRepository
+                .findPublishedEventById(id, StateEvent.PUBLISHED.toString()));
+
+
+
+
 
         // НУЖНО ПОДКЛЮЧИТЬ СЕРВИС СТАТИСТИКИ
 
 
-        return null;
 
     }
 
@@ -129,22 +133,54 @@ public class EventService {
             (UpdateEventUserRequest updateEventUserRequest, Long userId, Long eventId) {
 
         checkUserById(userId);
-        CategoryDto category = checkCategoryById(updateEventUserRequest.getCategory());
         Event event = checkEventById(eventId);
-        if (event.getState().equals(StateEvent.PENDING.toString()) || event.getState().equals(StateEvent.CANCELED.toString())) {
 
-            event.setAnnotation(updateEventUserRequest.getAnnotation());
+        if(updateEventUserRequest.getCategory() != null) {
+            CategoryDto category = checkCategoryById(updateEventUserRequest.getCategory());
             event.setCategory(category);
-            event.setDescription(updateEventUserRequest.getDescription());
-            event.setEventDate(updateEventUserRequest.getEventDate());
-            event.setLat(updateEventUserRequest.getLocation().getLat());
-            event.setLon(updateEventUserRequest.getLocation().getLon());
-            event.setPaid(updateEventUserRequest.isPaid());
-            event.setParticipantLimit(updateEventUserRequest.getParticipantLimit());
-            event.setRequestModeration(updateEventUserRequest.isRequestModeration());
-            event.setState(updateEventUserRequest.getStateAction());
-            event.setTitle(updateEventUserRequest.getTitle());
+        }
+        if (event.getState().equals(StateEvent.PENDING.toString())
+                || event.getState().equals(StateEvent.CANCELED.toString())) {
 
+            if(updateEventUserRequest.getAnnotation() != null) {
+                event.setAnnotation(updateEventUserRequest.getAnnotation());
+            }
+            if(updateEventUserRequest.getDescription() != null) {
+                event.setDescription(updateEventUserRequest.getDescription());
+            }
+            if(updateEventUserRequest.getEventDate() != null) {
+                event.setEventDate(updateEventUserRequest.getEventDate());
+            }
+            if(updateEventUserRequest.getLocation() != null) {
+                event.setLat(updateEventUserRequest.getLocation().getLat());
+                event.setLon(updateEventUserRequest.getLocation().getLon());
+            }
+            if(updateEventUserRequest.getParticipantLimit() != null) {
+                event.setParticipantLimit(updateEventUserRequest.getParticipantLimit());
+            }
+            if(updateEventUserRequest.getStateAction() != null) {
+                if(updateEventUserRequest.getStateAction()
+                        .equals(StateActionByUser.CANCEL_REVIEW.toString())) {
+                    event.setState(StateEvent.CANCELED.toString());
+                }
+                if(updateEventUserRequest.getStateAction()
+                        .equals(StateActionByUser.SEND_TO_REVIEW.toString())) {
+                    event.setState(StateEvent.PENDING.toString());
+                }
+            }
+            if(updateEventUserRequest.getTitle() != null) {
+                event.setTitle(updateEventUserRequest.getTitle());
+            }
+
+            if (updateEventUserRequest.isRequestModeration()) {
+                if (!event.isRequestModeration()) {
+                    event.setPaid(updateEventUserRequest.isRequestModeration());
+                }
+            } else {
+                if (event.isRequestModeration()) {
+                    event.setPaid(updateEventUserRequest.isRequestModeration());
+                }
+            }
             eventRepository.save(event);
 
             return EventMapper.eventToEventFullDto(event);
@@ -156,20 +192,27 @@ public class EventService {
 
     public List<ParticipationRequestDto> getParticipationRequestByUserId(Long userId, Long eventId) {
 
-        return participationRequestRepository.findByUserAndEventId(userId, eventId).orElse(Collections.emptyList());
+        Event event = eventRepository.findById(eventId).get();
+        if(!Objects.equals(event.getInitiator().getId(), userId)) {
+            return Collections.emptyList();
+        }
+        return participationRequestRepository.findByEventId(eventId);
+
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public EventRequestStatusUpdateResult updateEventRequestStatusByUserId
             (EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest, Long userId, Long eventId) {
 
         checkUserById(userId);
         Event event = checkEventById(eventId);
         checkEventParticipantLimit(event);
-        checkEventStateIsPENDING(event);
+
+        List<ParticipationRequestDto> resultList = new ArrayList<>();
+        Long confirmedRequests = event.getConfirmedRequests();
+        Long limitRequests = event.getParticipantLimit();
 
         if (event.getParticipantLimit() == 0 || !event.isRequestModeration()) {
-
-            List<ParticipationRequestDto> confirmedAllRequests = new ArrayList<>();
 
 
             for (Long requestId : eventRequestStatusUpdateRequest.getRequestIds()) {
@@ -178,29 +221,36 @@ public class EventService {
                         "The required object was not found.",
                         "Participation Request with id=" + requestId + " was not found",
                         LocalDateTime.now()));
-                requestDto.setStatus(StatusRequest.CONFIRMED.toString());
-                confirmedAllRequests.add(requestDto);
+                requestDto.setStatus(StatusRequest.CONFIRMED.toString());  // мб тут поправить
+                participationRequestRepository.save(requestDto);
+                confirmedRequests ++;
+                resultList.add(requestDto);
             }
-            return new EventRequestStatusUpdateResult(confirmedAllRequests, Collections.emptyList());
+            event.setConfirmedRequests(confirmedRequests);
+            eventRepository.save(event);
+            return new EventRequestStatusUpdateResult(resultList, Collections.emptyList());
         }
-
-        List<ParticipationRequestDto> confirmedRequests = new ArrayList<>();
-        List<ParticipationRequestDto> rejectedRequests = new ArrayList<>();
 
         for (Long requestId : eventRequestStatusUpdateRequest.getRequestIds()) {
 
-            ParticipationRequestDto participationRequest = participationRequestRepository.findById(requestId).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
+            ParticipationRequestDto participationRequest = participationRequestRepository
+                    .findById(requestId).orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND.toString(),
                     "The required object was not found.",
                     "Participation Request with id=" + requestId + " was not found",
                     LocalDateTime.now()));
-
-
-            // ТУТ ХЗ СО СТАТУСАМИ КАК
+            participationRequest.setStatus(eventRequestStatusUpdateRequest.getStatus());  // мб тут поправить
+            participationRequestRepository.save(participationRequest);
+            resultList.add(participationRequest);
+            if (eventRequestStatusUpdateRequest.getStatus().equals(StatusRequest.CONFIRMED.toString())) {
+                confirmedRequests ++;
+                if(confirmedRequests >= limitRequests) {
+                    eventRequestStatusUpdateRequest.setStatus(StatusRequest.REJECTED.toString());
+                }
+            }
         }
-
-        // ТУТ ХЗ СО СТАТУСАМИ КАК
-
-        return null;
+        event.setConfirmedRequests(confirmedRequests);
+        eventRepository.save(event);
+        return new EventRequestStatusUpdateResult(resultList, Collections.emptyList());
     }
 
     public List<EventFullDto> getEventsByAdmin(List<Long> users, List<String> states,
@@ -263,16 +313,6 @@ public class EventService {
             event.setLon(updateEventAdminRequest.getLocation().getLon());
             event.setLat(updateEventAdminRequest.getLocation().getLat());
         }
-        if (updateEventAdminRequest.isPaid()) {
-            if (!event.isPaid()) {
-                event.setPaid(updateEventAdminRequest.isPaid());
-            }
-        } else {
-            if (event.isPaid()) {
-                event.setPaid(updateEventAdminRequest.isPaid());
-            }
-        }
-
         if (updateEventAdminRequest.getParticipantLimit() != null) {
             event.setParticipantLimit(updateEventAdminRequest.getParticipantLimit());
         }
@@ -338,13 +378,6 @@ public class EventService {
         if (listRequests.size() >= event.getParticipantLimit()) {
             throw new DataIntegrityViolationException("In Event with id=" + event.getId() +
                     " no free places.");
-        }
-    }
-
-    private void checkEventStateIsPENDING(Event event) {
-        if (!event.getState().equals(StateEvent.PENDING.toString())) {
-            throw new DataIntegrityViolationException("Event with id=" + event.getId() +
-                    " state not PENDING");
         }
     }
 }

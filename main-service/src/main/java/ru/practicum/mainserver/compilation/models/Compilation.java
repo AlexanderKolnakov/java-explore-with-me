@@ -2,8 +2,10 @@ package ru.practicum.mainserver.compilation.models;
 
 
 import lombok.*;
+import ru.practicum.mainserver.event.model.Event;
 import ru.practicum.mainserver.event.model.EventShortDto;
 
+import javax.persistence.*;
 import java.util.List;
 
 @Getter
@@ -11,14 +13,22 @@ import java.util.List;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class CompilationDto {
+@Entity
+@Table(name = "COMPILATION")
+public class Compilation {
 
     // Подборка событий
 
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;   // Идентификатор подборки
 
-    private List<EventShortDto> events;   // Список событий входящих в подборку
+//    @ManyToMany
+//    @JoinTable(
+//            name = "COMPILATIONS_EVENTS",
+//            joinColumns = @JoinColumn(name = "COMPILATION_ID"),
+//            inverseJoinColumns = @JoinColumn(name = "EVENT_ID"))
+//    private List<Event> events;   // Список событий входящих в подборку
 
     private boolean pinned;   // Закреплена ли подборка на главной странице сайта
 

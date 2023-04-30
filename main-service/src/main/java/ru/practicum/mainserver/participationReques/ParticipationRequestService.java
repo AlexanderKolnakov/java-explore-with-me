@@ -63,7 +63,7 @@ public class ParticipationRequestService {
         checkUserById(userId);
 
         ParticipationRequestDto participationRequest = checkParticipationRequest(requestId);
-        participationRequest.setStatus(StatusRequest.CONFIRMED.toString());
+        participationRequest.setStatus(StateEvent.CANCELED.toString());
         return participationRequestRepository.save(participationRequest);
     }
 
