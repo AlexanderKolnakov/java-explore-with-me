@@ -6,6 +6,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import ru.practicum.ewm.client.stats.StatsClient;
 import ru.practicum.ewm.dto.stats.EndpointHitDto;
 import ru.practicum.mainserver.category.CategoryRepository;
 import ru.practicum.mainserver.category.CategoryService;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class EventService {
 
-    //    private final StatsClient statsClient;
+    private final StatsClient statsClient;
     private final EventRepository eventRepository;
 
     private final CategoryService categoryService;
@@ -41,7 +42,8 @@ public class EventService {
     private final ParticipationRequestRepository participationRequestRepository;
 
     public List<EventShortDto> getEvents(String text, Long categories, Boolean paid, LocalDateTime rangeStart,
-                                         LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, int from, int size) {
+                                         LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, int from, int size,
+                                         String ip, String url) {
 
         Pageable pageable = PageRequest.of((from / size), size);
         if (rangeStart == null) {
@@ -72,29 +74,14 @@ public class EventService {
                     .collect(Collectors.toList());
         }
 
-
-        // НУЖНО ПОДКЛЮЧИТЬ СЕРВИС СТАТИСТИКИ
-
+        createHit(ip, url);
 
         return EventMapper.listEventToListEventShortDto(resultList);
     }
 
-    public EventFullDto getFullEventsById(Long id) {
+    public EventFullDto getFullEventsById(Long id, String ip, String url) {
         checkEventById(id);
-
-
-        // НУЖНО ПОДКЛЮЧИТЬ СЕРВИС СТАТИСТИКИ (что просматривали ивент)
-
-
-        EndpointHitDto e = EndpointHitDto.builder()
-                .app("ewm-main-service")
-                .ip("XZ IP")
-                .uri("XZ URI")
-                .timestamp(LocalDateTime.now())
-                .build();
-
-//        statsClient.hit(e);
-
+        createHit(ip, url);
 
         return EventMapper.eventToEventFullDto(eventRepository
                 .findPublishedEventById(id, StateEvent.PUBLISHED.toString()));
@@ -377,5 +364,12 @@ public class EventService {
             throw new DataIntegrityViolationException("In Event with id=" + event.getId() +
                     " no free places.");
         }
+    }
+
+    private void createHit(String ip, String url) {
+        String serviceName = "main-service";
+        EndpointHitDto endpointHitDto = new EndpointHitDto(serviceName, url, ip, LocalDateTime.now());
+
+        statsClient.hit(endpointHitDto);
     }
 }

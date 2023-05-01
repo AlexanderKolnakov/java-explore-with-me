@@ -14,7 +14,9 @@ import lombok.extern.jackson.Jacksonized;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ViewStatsDto {
 
+
     private Long hits;
+
 
     private String app;
 

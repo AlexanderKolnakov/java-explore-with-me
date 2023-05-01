@@ -7,9 +7,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.mainserver.category.models.CategoryDto;
 import ru.practicum.mainserver.category.models.NewCategoryDto;
+import ru.practicum.mainserver.event.EventRepository;
 
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -17,6 +19,8 @@ import java.util.List;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+
+    private final EventRepository eventRepository;
 
     public CategoryDto getCategoryById(Long catId) {
 
@@ -27,7 +31,6 @@ public class CategoryService {
     public List<CategoryDto> getCategory(int from, int size) {
 
         Pageable pageable = PageRequest.of((from / size), size);
-
         return categoryRepository.findAll(pageable).toList();
     }
 
@@ -49,9 +52,7 @@ public class CategoryService {
     public void deleteCategory(Long catId) {
         categoryRepository.findById(catId)
                 .orElseThrow(() -> new EntityNotFoundException("Category with id=" + catId + " was not found"));
-
-        // + проверка, что с категорией не свзяаны ни одного события.
-
+        checkCategoryInEvent(catId);
         categoryRepository.deleteById(catId);
     }
 
@@ -66,5 +67,11 @@ public class CategoryService {
         CategoryDto createdCategory = CategoryMapper.newCategoryToCategoryDto(newCategoryDto);
 
         return categoryRepository.save(createdCategory);
+    }
+
+    private void checkCategoryInEvent(Long catId) {
+        if (!eventRepository.findByCategory(catId).orElse(Collections.emptyList()).isEmpty()) {
+            throw new DataIntegrityViolationException("Category with id=" + catId + " already user in events");
+        }
     }
 }

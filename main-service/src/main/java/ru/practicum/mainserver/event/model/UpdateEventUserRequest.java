@@ -31,11 +31,11 @@ public class UpdateEventUserRequest {
 
     private Location location;
 
-    private  boolean paid;   // Новое значение флага о платности мероприятия
+    private  Boolean paid;   // Новое значение флага о платности мероприятия
 
     private Long participantLimit;   // Новый лимит пользователей
 
-    private boolean requestModeration;   // Нужна ли пре-модерация заявок на участие
+    private Boolean requestModeration;   // Нужна ли пре-модерация заявок на участие
 
     private String stateAction;   // Новое состояние события
 

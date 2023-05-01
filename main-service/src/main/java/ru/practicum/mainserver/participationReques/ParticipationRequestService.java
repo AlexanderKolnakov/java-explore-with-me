@@ -40,15 +40,22 @@ public class ParticipationRequestService {
         checkEventInitiator(event, userId);
         checkEventState(event);
         checkEventByUserIsCreated(userId, eventId);
-        checkEventParticipantLimit(event);
 
         ParticipationRequestDto participationRequest = new ParticipationRequestDto();
 
+
+//        if (!checkEventParticipantLimit(event))
+//            participationRequest.setStatus(StatusRequest.REJECTED.toString());
+//            throw new DataIntegrityViolationException("Event is Full");   // противоречие в тестаХ??
+
         if (!event.isRequestModeration()) {
+            checkEventParticipantLimit(event);
             participationRequest.setStatus(StatusRequest.CONFIRMED.toString());
         } else {
             participationRequest.setStatus(StatusRequest.PENDING.toString());
         }
+
+
         participationRequest.setCreated(LocalDateTime.now());
         participationRequest.setEvent(eventId);
         participationRequest.setRequester(userId);
@@ -101,9 +108,9 @@ public class ParticipationRequestService {
     private void checkEventParticipantLimit(Event event) {
         List<ParticipationRequestDto> listRequests = participationRequestRepository.findByEventId(event.getId());
         if (listRequests.size() >= event.getParticipantLimit()) {
-            throw new DataIntegrityViolationException("In Event with id=" + event.getId() +
-                    " no free places.");
+            throw new DataIntegrityViolationException("Event is Full");
         }
+        ;
     }
 
     private ParticipationRequestDto checkParticipationRequest(Long requestId) {

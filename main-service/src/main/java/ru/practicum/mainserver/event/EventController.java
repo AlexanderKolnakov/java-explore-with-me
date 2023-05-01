@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainserver.event.model.*;
 import ru.practicum.mainserver.participationReques.model.ParticipationRequestDto;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,15 +31,21 @@ public class EventController {
             @RequestParam(name = "onlyAvailable", required = false, defaultValue = "false") Boolean onlyAvailable,
             @RequestParam(required = false, defaultValue = "EVENT_DATE") String sort,
             @RequestParam(name = "from", defaultValue = "0") int from,
-            @RequestParam(name = "size", defaultValue = "10") int size) {
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            HttpServletRequest request) {
+        String ip = request.getRemoteAddr();
+        String url = request.getRequestURI();
         log.info("Получен GET запрос на получение списка событий по параметрам");
-        return eventService.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
+        return eventService.getEvents(text, categories, paid, rangeStart, rangeEnd,
+                onlyAvailable, sort, from, size, ip, url);
     }
 
     @GetMapping("/events/{id}")
-    public EventFullDto getFullEventsById(@PathVariable Long id) {
+    public EventFullDto getFullEventsById(@PathVariable Long id, HttpServletRequest request) {
+        String ip = request.getRemoteAddr();
+        String url = request.getRequestURI();
         log.info("Получен GET запрос на получение информации о событий c id - " + id);
-        return eventService.getFullEventsById(id);
+        return eventService.getFullEventsById(id, ip, url);
     }
 
     @GetMapping("/users/{userId}/events")

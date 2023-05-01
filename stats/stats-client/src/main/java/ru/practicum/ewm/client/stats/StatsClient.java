@@ -1,27 +1,25 @@
 package ru.practicum.ewm.client.stats;
 
+import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.ewm.dto.stats.EndpointHitDto;
+import ru.practicum.ewm.dto.stats.ViewStatsDto;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class StatsClient extends BaseClient {
 
-//    private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-//    private final String application;
-//    private final String statsServiceUri;
-//    private final ObjectMapper json;
-//    private final HttpClient httpClient;
-
-
     @Autowired
-    public StatsClient(@Value("${stats-server.url}") String serverUrl, RestTemplateBuilder builder) {
+    public StatsClient(@Value("${statistic-server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
@@ -30,82 +28,30 @@ public class StatsClient extends BaseClient {
         );
     }
 
-    //    public ResponseEntity<Object> hit(HttpServletRequest userRequest) {
-    public ResponseEntity<Object> hit(EndpointHitDto hit) {
-//        EndpointHitDto hit = EndpointHitDto.builder()
-//                .app("ewm-main-service")
-//                .ip(userRequest.getRemoteAddr())
-//                .uri(userRequest.getRequestURI())
-//                .timestamp(LocalDateTime.now())
-//                .build();
+    public ViewStatsDto hit(EndpointHitDto endpointHitDto) {
+        Gson gson = new Gson();
+        ResponseEntity<Object> objectResponseEntity = post("/hit", endpointHitDto);
+        String json = gson.toJson(objectResponseEntity.getBody());
 
+        return gson.fromJson(json, ViewStatsDto.class);
+    }
 
-//        EndpointHitDto hit = EndpointHitDto.builder()
-//                .app("ewm-main-service")
-//                .ip(userRequest.getRemoteAddr())
-//                .uri(userRequest.getRequestURI())
-//                .timestamp(LocalDateTime.now())
-//                .build();
-        return post("/hit", hit);
+    public List<ViewStatsDto> getStats(String start, String end, List<String> uris, Boolean unique) {
+        Gson gson = new Gson();
+        Map<String, Object> parameters = Map.of(
+                "uris", String.join(",", uris),
+                "unique", unique,
+                "start", start,
+                "end", end
+        );
+        ResponseEntity<Object> objectResponseEntity =
+                get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
+        String json = gson.toJson(objectResponseEntity.getBody());
+        ViewStatsDto[] viewStatDtoArray = gson.fromJson(json, ViewStatsDto[].class);
+
+        return Arrays.asList(viewStatDtoArray);
     }
 }
-
-
-//    public void hit(HttpServletRequest userRequest) {
-//        EndpointHitDto hit = EndpointHitDto.builder()
-//                .app("ewm-main-service")
-//                .ip(userRequest.getRemoteAddr())
-//                .uri(userRequest.getRequestURI())
-//                .timestamp(LocalDateTime.now())
-//                .build();
-//        try {
-////            HttpRequest.BodyPublisher bodyPublisher = HttpRequest
-////                    .BodyPublisher
-//            HttpRequest.
-////
-////            HttpRequest hitRequest = HttpRequest.newBuilder()
-////                    .
-//
-//            HttpResponse<Void> response = httpClient.send( )
-//        }
-//
-//
-//        ;
-//
-//
-//    }
-
-
-// из чата
-//    @Autowired
-//    public StatsClient(RestTemplateBuilder builder) {
-//        super(builder
-//                .uriTemplateHandler(new DefaultUriBuilderFactory("http://localhost:9090"))
-//                .requestFactory(HttpComponentsClientHttpRequestFactory::new)
-//                .build()
-//        );
-//    }
-//
-//    @Autowired
-//    public BookingClient(@Value("${shareit-server.url}") String serverUrl,
-//                         RestTemplateBuilder builder) {
-//        super(builder
-//                .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + API_PREFIX))
-//                .requestFactory(HttpComponentsClientHttpRequestFactory::new)
-//                .build()
-//        );
-//    }
-
-
-//    private static final DateTimeFormatter DTF =  DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-////    private final String application;
-////    private final String statsServiceUri;
-//    private final ObjectMapper json;
-//    private final HttpClient httpClient;
-
-//    public StatsClient(ObjectMapper json) {
-//        this.json = json;
-//    }
 
 
 
