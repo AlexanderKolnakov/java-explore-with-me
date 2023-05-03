@@ -61,11 +61,14 @@ public class CompilationService {
     public void deleteCompilation(Long compId) {
         checkCompilation(compId);
         List<CompilationEvent> listByDelete = compilationEventRepository.findByCompilationId(compId);
+        List<Long> compEventId = new ArrayList<>();
         for (CompilationEvent compEvent : listByDelete) {
-            compilationEventRepository.deleteById(compEvent.getId());
+            compEventId.add(compEvent.getId());
         }
+        compilationEventRepository.deleteAllById(compEventId);
         compilationRepository.deleteById(compId);
     }
+
 
     @Transactional(rollbackOn = Exception.class)
     public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest updateCompilationRequest) {
@@ -114,7 +117,6 @@ public class CompilationService {
                     .orElseThrow(() -> new EntityNotFoundException("Event with id=" + comEvent.getEventId() +
                             " was not found"))));
         }
-
         CompilationDto compilationDto = new CompilationDto();
         compilationDto.setId(compilation.getId());
         compilationDto.setTitle(compilation.getTitle());

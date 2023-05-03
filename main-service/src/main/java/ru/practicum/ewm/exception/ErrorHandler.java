@@ -1,5 +1,10 @@
 package ru.practicum.ewm.exception;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Value;
+import lombok.extern.jackson.Jacksonized;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -18,31 +23,40 @@ public class ErrorHandler {
 
     @ExceptionHandler({MethodArgumentNotValidException.class, MissingRequestHeaderException.class})
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-    public ApiError error400(final MethodArgumentNotValidException e) {
+    public ErrorResponse error400(final MethodArgumentNotValidException e) {
         log.info("400 {}", e.getMessage());
-        return new ApiError(HttpStatus.BAD_REQUEST.toString(),
+        return new ErrorResponse(HttpStatus.BAD_REQUEST.toString(),
                 "Incorrectly made request.",
-                e.getMessage(),
-                LocalDateTime.now());
+                e.getMessage());
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
     @ResponseStatus(value = HttpStatus.NOT_FOUND)
-    public ApiError error404(final EntityNotFoundException e) {
+    public ErrorResponse error404(final EntityNotFoundException e) {
         log.info("404 {}", e.getMessage());
-        return new ApiError(HttpStatus.NOT_FOUND.toString(),
+        return new ErrorResponse(HttpStatus.NOT_FOUND.toString(),
                 "The required object was not found.",
-                e.getMessage(),
-                LocalDateTime.now());
+                e.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(value = HttpStatus.CONFLICT)
-    public ApiError error409(final DataIntegrityViolationException e) {
+    public ErrorResponse error409(final DataIntegrityViolationException e) {
         log.info("409 {}", e.getMessage());
-        return new ApiError(HttpStatus.CONFLICT.toString(),
+        return new ErrorResponse(HttpStatus.CONFLICT.toString(),
                 "Incorrectly made request.",
-                e.getMessage(),
-                LocalDateTime.now());
+                e.getMessage());
+    }
+
+    @Value
+    @Builder
+    @AllArgsConstructor
+    @Jacksonized
+    public static class ErrorResponse {
+        String status;
+        String reason;
+        String message;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+        LocalDateTime timestamp = LocalDateTime.now();
     }
 }

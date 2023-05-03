@@ -20,6 +20,8 @@ import java.util.Map;
 @Slf4j
 public class StatsClient extends BaseClient {
 
+//    Для локальной работы - ("http://localhost:9090")
+//    Для контейнеров      - ("http://stats-server:9090")
     @Autowired
     public StatsClient(@Value("http://stats-server:9090") String serverUrl, RestTemplateBuilder builder) {
         super(

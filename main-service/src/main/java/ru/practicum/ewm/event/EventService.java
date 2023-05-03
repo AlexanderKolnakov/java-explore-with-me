@@ -66,14 +66,10 @@ public class EventService {
                     .orElse(Collections.emptyList());
         }
         if (sort.equals(SortEvent.EVENT_DATE.toString())) {
-            eventList.stream()
-                    .sorted(Comparator.comparing(Event::getEventDate).reversed())
-                    .collect(Collectors.toList());
+            eventList.sort(Comparator.comparing(Event::getEventDate).reversed());
         }
         if (sort.equals(SortEvent.VIEWS.toString())) {
-            eventList.stream()
-                    .sorted(Comparator.comparing(Event::getViews).reversed())
-                    .collect(Collectors.toList());
+            eventList.sort(Comparator.comparing(Event::getViews).reversed());
         }
         createHit(ip, url);
         List<Event> resultList = setViewToEvents(eventList);

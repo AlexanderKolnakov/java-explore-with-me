@@ -10,7 +10,6 @@ import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.participationReques.enums.StatusRequest;
 import ru.practicum.ewm.participationReques.model.ParticipationRequestDto;
 import ru.practicum.ewm.user.UserRepository;
-import ru.practicum.ewm.user.models.UserDto;
 
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
@@ -66,8 +65,8 @@ public class ParticipationRequestService {
         return participationRequestRepository.save(participationRequest);
     }
 
-    private UserDto checkUserById(Long userId) {
-        return userRepository.findById(userId)
+    private void checkUserById(Long userId) {
+        userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User with id=" + userId + " was not found"));
     }
 
@@ -103,7 +102,6 @@ public class ParticipationRequestService {
         if (listRequests.size() >= event.getParticipantLimit()) {
             throw new DataIntegrityViolationException("Event is Full");
         }
-        ;
     }
 
     private ParticipationRequestDto checkParticipationRequest(Long requestId) {
