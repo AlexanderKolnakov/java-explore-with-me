@@ -83,20 +83,14 @@ public class CompilationService {
         List<CompilationEvent> compilationEventList = compilationEventRepository.findByCompilationId(compId);
 
         Compilation savedCompilation = compilationRepository.save(compilation);
+        deleteCompilationEventRepositoryFromList(compilationEventList);
 
-        for (CompilationEvent compEvent : compilationEventList) {
-            compilationEventRepository.deleteById(compEvent.getId());
-        }
         return saveCompilationRequests(updateCompilationRequest, savedCompilation, eventList);
     }
 
     private List<Event> checkEvents(List<Long> events) {
-        List<Event> resultList = new ArrayList<>();
-        for (Long eventId : events) {
-            resultList.add(eventRepository.findById(eventId)
-                    .orElseThrow(() -> new EntityNotFoundException("Event with id=" + eventId + " was not found")));
-        }
-        return resultList;
+        return eventRepository.findByListId(events)
+                .orElseThrow(() -> new EntityNotFoundException("Events was not found"));
     }
 
     private Compilation checkCompilation(Long compId) {
@@ -127,13 +121,16 @@ public class CompilationService {
     }
 
     private CompilationDto saveCompilationRequests(CompilationParent comp, Compilation savedCompilation, List<Event> eventList) {
+
+        List<CompilationEvent> listToSave = new ArrayList<>();
         for (Long eventId : comp.getEvents()) {
             CompilationEvent compilationEvent = new CompilationEvent();
             compilationEvent.setEventId(eventId);
             compilationEvent.setCompilationId(savedCompilation.getId());
-
-            compilationEventRepository.save(compilationEvent);
+            listToSave.add(compilationEvent);
         }
+        compilationEventRepository.saveAll(listToSave);
+
         CompilationDto compilationDto = new CompilationDto();
         compilationDto.setEvents(EventMapper.listEventToListEventShortDto(eventList));
         compilationDto.setId(savedCompilation.getId());
@@ -141,5 +138,13 @@ public class CompilationService {
         compilationDto.setTitle(savedCompilation.getTitle());
 
         return compilationDto;
+    }
+
+    private void deleteCompilationEventRepositoryFromList(List<CompilationEvent> deletedList) {
+        List<Long> compEventId = new ArrayList<>();
+        for (CompilationEvent compEvent : deletedList) {
+            compEventId.add(compEvent.getId());
+        }
+        compilationEventRepository.deleteAllById(compEventId);
     }
 }

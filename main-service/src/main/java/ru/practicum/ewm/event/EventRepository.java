@@ -68,4 +68,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("select e from Event e " +
             "where e.category.id =? 1")
     Optional<List<Event>> findByCategory(Long catId);
+
+    @Query("select e from Event e " +
+            "where e.id in (:events) ")
+    Optional<List<Event>> findByListId(List<Long> events);
 }

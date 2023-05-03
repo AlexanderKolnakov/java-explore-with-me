@@ -37,7 +37,6 @@ public class EventService {
 
     private final StatsClient statsClient;
     private final EventRepository eventRepository;
-
     private final CategoryService categoryService;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
@@ -201,53 +200,47 @@ public class EventService {
         Long confirmedRequests = event.getConfirmedRequests();
         Long limitRequests = event.getParticipantLimit();
 
+        List<Long> listParticipationRequestsId = new ArrayList<>(eventRequestStatusUpdateRequest.getRequestIds());
+        List<ParticipationRequestDto> resultList = participationRequestRepository.findAllById(listParticipationRequestsId);
+
         if (event.getParticipantLimit() == 0 || !event.isRequestModeration()) {
-            List<ParticipationRequestDto> resultList = new ArrayList<>();
 
-            for (Long requestId : eventRequestStatusUpdateRequest.getRequestIds()) {
-
-                ParticipationRequestDto requestDto = participationRequestRepository
-                        .findById(requestId).orElseThrow(() -> new EntityNotFoundException("Participation Request with id=" +
-                                requestId + " was not found"));
-                requestDto.setStatus(StatusRequest.CONFIRMED.toString());  // мб тут поправить
-                participationRequestRepository.save(requestDto);
+            for (ParticipationRequestDto request : resultList) {
+                request.setStatus(StatusRequest.CONFIRMED.toString());
                 confirmedRequests++;
-                resultList.add(requestDto);
             }
+            participationRequestRepository.saveAll(resultList);
+
             event.setConfirmedRequests(confirmedRequests);
             eventRepository.save(event);
             return new EventRequestStatusUpdateResult(resultList, Collections.emptyList());
         }
-        List<ParticipationRequestDto> confirmedtList = new ArrayList<>();
-        List<ParticipationRequestDto> rejectedltList = new ArrayList<>();
 
-        for (Long requestId : eventRequestStatusUpdateRequest.getRequestIds()) {
+        List<ParticipationRequestDto> confirmedList = new ArrayList<>();
+        List<ParticipationRequestDto> rejectedList = new ArrayList<>();
 
-            ParticipationRequestDto participationRequest = participationRequestRepository
-                    .findById(requestId)
-                    .orElseThrow(() -> new EntityNotFoundException("Participation Request with id=" + requestId +
-                            " was not found"));
-            participationRequest.setStatus(eventRequestStatusUpdateRequest.getStatus());  // мб тут поправить
-            participationRequestRepository.save(participationRequest);
+        for (ParticipationRequestDto request : resultList) {
+            request.setStatus(eventRequestStatusUpdateRequest.getStatus());
             if (eventRequestStatusUpdateRequest.getStatus().equals(StatusRequest.CONFIRMED.toString())) {
-                confirmedtList.add(participationRequest);
+                confirmedList.add(request);
                 confirmedRequests++;
                 if (confirmedRequests >= limitRequests) {
                     eventRequestStatusUpdateRequest.setStatus(StatusRequest.REJECTED.toString());
                 }
             } else {
-                rejectedltList.add(participationRequest);
+                rejectedList.add(request);
             }
         }
+        participationRequestRepository.saveAll(resultList);
+
         event.setConfirmedRequests(confirmedRequests);
         eventRepository.save(event);
-        return new EventRequestStatusUpdateResult(confirmedtList, rejectedltList);
+        return new EventRequestStatusUpdateResult(confirmedList, rejectedList);
     }
 
     public List<EventFullDto> getEventsByAdmin(List<Long> users, List<String> states,
                                                List<Long> categories, LocalDateTime rangeStart,
                                                LocalDateTime rangeEnd, int from, int size) {
-
         Pageable pageable = PageRequest.of((from / size), size);
 
         List<Event> eventList = eventRepository.findEventWhitParametersByAdmin(users, states, categories, rangeStart, rangeEnd, pageable)
@@ -387,10 +380,9 @@ public class EventService {
             eventViews.put(viewStat.getUri(), viewStat.getHits());
         }
 
-        return events.stream().map(event -> {
+        return events.stream().peek(event -> {
             Long hits = eventViews.get(String.format("/events/%s", event.getId()));
             event.setViews(hits != null ? hits : 0);
-            return event;
         }).collect(Collectors.toList());
     }
 }
