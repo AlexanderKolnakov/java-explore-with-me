@@ -2,6 +2,7 @@ package ru.practicum.ewm.event;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.simple.parser.ParseException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,7 @@ import ru.practicum.ewm.StatsClient;
 import ru.practicum.ewm.category.CategoryRepository;
 import ru.practicum.ewm.category.CategoryService;
 import ru.practicum.ewm.category.models.CategoryDto;
+import ru.practicum.ewm.clients.GeoClient;
 import ru.practicum.ewm.dto.EndpointHitDto;
 import ru.practicum.ewm.dto.ViewStatsDto;
 import ru.practicum.ewm.event.enums.SortEvent;
@@ -17,6 +19,7 @@ import ru.practicum.ewm.event.enums.StateActionByAdmin;
 import ru.practicum.ewm.event.enums.StateActionByUser;
 import ru.practicum.ewm.event.enums.StateEvent;
 import ru.practicum.ewm.event.model.*;
+import ru.practicum.ewm.location.LocationInMap;
 import ru.practicum.ewm.participationReques.ParticipationRequestRepository;
 import ru.practicum.ewm.participationReques.enums.StatusRequest;
 import ru.practicum.ewm.participationReques.model.ParticipationRequestDto;
@@ -36,6 +39,8 @@ import java.util.stream.Collectors;
 public class EventService {
 
     private final StatsClient statsClient;
+
+    private final GeoClient geoClient;
     private final EventRepository eventRepository;
     private final CategoryService categoryService;
     private final UserRepository userRepository;
@@ -136,21 +141,9 @@ public class EventService {
         if (event.getState().equals(StateEvent.PENDING.toString())
                 || event.getState().equals(StateEvent.CANCELED.toString())) {
 
-            if (updateEventUserRequest.getAnnotation() != null) {
-                event.setAnnotation(updateEventUserRequest.getAnnotation());
-            }
-            if (updateEventUserRequest.getDescription() != null) {
-                event.setDescription(updateEventUserRequest.getDescription());
-            }
+            setViewToEvents(updateEventUserRequest, event);
             if (updateEventUserRequest.getEventDate() != null) {
                 event.setEventDate(updateEventUserRequest.getEventDate());
-            }
-            if (updateEventUserRequest.getLocation() != null) {
-                event.setLat(updateEventUserRequest.getLocation().getLat());
-                event.setLon(updateEventUserRequest.getLocation().getLon());
-            }
-            if (updateEventUserRequest.getParticipantLimit() != null) {
-                event.setParticipantLimit(updateEventUserRequest.getParticipantLimit());
             }
             if (updateEventUserRequest.getStateAction() != null) {
                 if (updateEventUserRequest.getStateAction()
@@ -161,16 +154,6 @@ public class EventService {
                         .equals(StateActionByUser.SEND_TO_REVIEW.toString())) {
                     event.setState(StateEvent.PENDING.toString());
                 }
-            }
-            if (updateEventUserRequest.getTitle() != null) {
-                event.setTitle(updateEventUserRequest.getTitle());
-            }
-            if (updateEventUserRequest.getPaid() != null) {
-                event.setPaid(updateEventUserRequest.getPaid());
-            }
-
-            if (updateEventUserRequest.getRequestModeration() != null) {
-                event.setRequestModeration(updateEventUserRequest.getRequestModeration());
             }
             setViewToEvents(List.of(event));
             eventRepository.save(event);
@@ -289,32 +272,33 @@ public class EventService {
                     .orElseThrow(() -> new EntityNotFoundException("Category with id=" +
                             updateEventAdminRequest.getCategory() + " was not found")));
         }
-        if (updateEventAdminRequest.getAnnotation() != null) {
-            event.setAnnotation(updateEventAdminRequest.getAnnotation());
-        }
-        if (updateEventAdminRequest.getDescription() != null) {
-            event.setDescription(updateEventAdminRequest.getDescription());
-        }
-        if (updateEventAdminRequest.getLocation() != null) {
-            event.setLon(updateEventAdminRequest.getLocation().getLon());
-            event.setLat(updateEventAdminRequest.getLocation().getLat());
-        }
-        if (updateEventAdminRequest.getParticipantLimit() != null) {
-            event.setParticipantLimit(updateEventAdminRequest.getParticipantLimit());
-        }
-        if (updateEventAdminRequest.getPaid() != null) {
-            event.setPaid(updateEventAdminRequest.getPaid());
-        }
-        if (updateEventAdminRequest.getRequestModeration() != null) {
-            event.setRequestModeration(updateEventAdminRequest.getRequestModeration());
-        }
-        if (updateEventAdminRequest.getTitle() != null) {
-            event.setTitle(updateEventAdminRequest.getTitle());
-        }
+       setViewToEvents(updateEventAdminRequest, event);
         setViewToEvents(List.of(event));
         eventRepository.save(event);
         return EventMapper.eventToEventFullDto(event);
     }
+
+
+
+    public LocationInMap getLoc(Float lat, Float lon)  {
+        log.info("ПЕРЕДАЕМ КООРДИНАТЫ - " + lat + " и " + lon);
+        LocationInMap ansver = geoClient.getLocFromYandex(lat, lon);
+
+        log.info("ПОЛУЧИЛИ ОТВЕТ!!");
+
+        return ansver;
+
+    }
+
+
+
+
+
+
+
+
+
+
 
     private void checkDataTime(LocalDateTime eventDate) {
         if (eventDate.plusHours(2).isBefore(LocalDateTime.now())) {
@@ -385,4 +369,31 @@ public class EventService {
             event.setViews(hits != null ? hits : 0);
         }).collect(Collectors.toList());
     }
+
+    private void setViewToEvents(UpdateEventRequest updateEvent, Event event) {
+        if (updateEvent.getAnnotation() != null) {
+            event.setAnnotation(updateEvent.getAnnotation());
+        }
+        if (updateEvent.getDescription() != null) {
+            event.setDescription(updateEvent.getDescription());
+        }
+        if (updateEvent.getLocation() != null) {
+            event.setLon(updateEvent.getLocation().getLon());
+            event.setLat(updateEvent.getLocation().getLat());
+        }
+        if (updateEvent.getParticipantLimit() != null) {
+            event.setParticipantLimit(updateEvent.getParticipantLimit());
+        }
+        if (updateEvent.getPaid() != null) {
+            event.setPaid(updateEvent.getPaid());
+        }
+        if (updateEvent.getRequestModeration() != null) {
+            event.setRequestModeration(updateEvent.getRequestModeration());
+        }
+        if (updateEvent.getTitle() != null) {
+            event.setTitle(updateEvent.getTitle());
+        }
+    }
+
+
 }

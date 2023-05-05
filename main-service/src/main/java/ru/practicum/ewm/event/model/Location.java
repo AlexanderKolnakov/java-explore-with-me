@@ -9,7 +9,6 @@ import lombok.*;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-
 public class Location {
 
     // Широта и долгота места проведения события

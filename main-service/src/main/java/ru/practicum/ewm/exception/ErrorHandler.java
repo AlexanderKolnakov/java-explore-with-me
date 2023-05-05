@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 public class ErrorHandler {
 
     @ExceptionHandler({MethodArgumentNotValidException.class, MissingRequestHeaderException.class})
-    @ResponseStatus(value = HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse error400(final MethodArgumentNotValidException e) {
         log.info("400 {}", e.getMessage());
         return new ErrorResponse(HttpStatus.BAD_REQUEST.toString(),
@@ -31,7 +31,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    @ResponseStatus(value = HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse error404(final EntityNotFoundException e) {
         log.info("404 {}", e.getMessage());
         return new ErrorResponse(HttpStatus.NOT_FOUND.toString(),
@@ -40,7 +40,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    @ResponseStatus(value = HttpStatus.CONFLICT)
+    @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse error409(final DataIntegrityViolationException e) {
         log.info("409 {}", e.getMessage());
         return new ErrorResponse(HttpStatus.CONFLICT.toString(),
