@@ -47,6 +47,7 @@ public class EventService {
     private final LocationRepository locationRepository;
     private final ParticipationRequestRepository participationRequestRepository;
 
+    @Transactional(rollbackOn = Exception.class)
     public List<EventShortDto> getEvents(String text, Long categories, Boolean paid, LocalDateTime rangeStart,
                                          LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, int from, int size,
                                          String ip, String url) {
@@ -54,6 +55,9 @@ public class EventService {
         Pageable pageable = PageRequest.of((from / size), size);
         if (rangeStart == null) {
             rangeStart = LocalDateTime.now();
+        }
+        if (rangeEnd == null) {
+            rangeEnd = LocalDateTime.now().plusYears(2);
         }
         List<Event> eventList;
 
@@ -80,6 +84,7 @@ public class EventService {
         return EventMapper.listEventToListEventShortDto(resultList);
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public EventFullDto getFullEventsById(Long id, String ip, String url) {
         checkEventById(id);
         createHit(ip, url);

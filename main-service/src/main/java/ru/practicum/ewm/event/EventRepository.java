@@ -72,4 +72,15 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("select e from Event e " +
             "where e.id in (:events) ")
     Optional<List<Event>> findByListId(List<Long> events);
+
+
+    @Query("select e from Event e " +
+            "where e.eventDate between :rangeStart and :rangeEnd " +
+            "and upper(e.location.city) like upper(concat('%', :locationText, '%')) " +
+            " or upper(e.location.text) like upper(concat('%', :locationText, '%'))" +
+            " or upper(e.location.countryCode) like upper(concat('%', :locationText, '%'))")
+    List<Event> findEventByLocationText(@Param("locationText")String locationText,
+                                        @Param("rangeStart")LocalDateTime rangeStart,
+                                        @Param("rangeEnd")LocalDateTime rangeEnd,
+                                        Pageable pageable);
 }
