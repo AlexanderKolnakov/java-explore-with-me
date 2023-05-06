@@ -2,12 +2,10 @@ package ru.practicum.ewm.event;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.simple.parser.ParseException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.event.model.*;
-import ru.practicum.ewm.location.LocationInMap;
 import ru.practicum.ewm.participationReques.model.ParticipationRequestDto;
 
 import javax.servlet.http.HttpServletRequest;
@@ -80,7 +78,7 @@ public class EventController {
     public EventFullDto updateFullEventsByUserId(
             @PathVariable Long userId,
             @PathVariable Long eventId,
-            @RequestBody  @Valid UpdateEventUserRequest updateEventUserRequest) {
+            @RequestBody @Valid UpdateEventUserRequest updateEventUserRequest) {
         log.debug("Получен PATCH запрос на обновление информации о событии с id " + eventId + ", " +
                 "добавленной пользователем c id - " + userId);
         return eventService.updateFullEventsByUserId(updateEventUserRequest, userId, eventId);
@@ -100,7 +98,7 @@ public class EventController {
     public EventRequestStatusUpdateResult updateEventRequestStatusByUserId(
             @PathVariable Long userId,
             @PathVariable Long eventId,
-            @RequestBody  EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest) {
+            @RequestBody EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest) {
         log.debug("Получен PATCH запрос на обновление информации о заявке на участие в событии с id " + eventId + ", " +
                 "добавленной пользователем c id - " + userId);
         return eventService.updateEventRequestStatusByUserId(eventRequestStatusUpdateRequest, userId, eventId);
@@ -126,17 +124,4 @@ public class EventController {
         log.debug("ADMIN. Получен PATCH запрос на обновление информации о событии с id " + eventId);
         return eventService.updateEventsByAdmin(updateEventAdminRequest, eventId);
     }
-
-
-    //        37.611347,55.760241
-
-    @GetMapping("/getloc")
-    public LocationInMap getLoc(
-            @RequestParam Float lat,
-            @RequestParam Float lon)  {
-        log.info("ПОЛУЧЕНИЕ ГЕОЛОКАЦИИ");
-        return eventService.getLoc(lat, lon);
-    }
-
-
 }

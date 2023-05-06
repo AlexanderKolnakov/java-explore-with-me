@@ -4,6 +4,7 @@ package ru.practicum.ewm.event.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import ru.practicum.ewm.category.models.CategoryDto;
+import ru.practicum.ewm.location.LocationInMap;
 import ru.practicum.ewm.user.models.UserShortDto;
 
 import java.time.LocalDateTime;
@@ -36,7 +37,7 @@ public class EventFullDto {
 
     private UserShortDto initiator; // Пользователь (краткая информация)
 
-    private Location location; // Широта и долгота места проведения события
+    private LocationInMap location; // информация о места проведения события
 
     private boolean paid; // Нужно ли оплачивать участие
 

@@ -2,7 +2,6 @@ package ru.practicum.ewm.event;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.simple.parser.ParseException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +19,7 @@ import ru.practicum.ewm.event.enums.StateActionByUser;
 import ru.practicum.ewm.event.enums.StateEvent;
 import ru.practicum.ewm.event.model.*;
 import ru.practicum.ewm.location.LocationInMap;
+import ru.practicum.ewm.location.LocationRepository;
 import ru.practicum.ewm.participationReques.ParticipationRequestRepository;
 import ru.practicum.ewm.participationReques.enums.StatusRequest;
 import ru.practicum.ewm.participationReques.model.ParticipationRequestDto;
@@ -39,12 +39,12 @@ import java.util.stream.Collectors;
 public class EventService {
 
     private final StatsClient statsClient;
-
     private final GeoClient geoClient;
     private final EventRepository eventRepository;
     private final CategoryService categoryService;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final LocationRepository locationRepository;
     private final ParticipationRequestRepository participationRequestRepository;
 
     public List<EventShortDto> getEvents(String text, Long categories, Boolean paid, LocalDateTime rangeStart,
@@ -107,7 +107,12 @@ public class EventService {
         UserDto user = checkUserById(userId);
         CategoryDto category = categoryService.getCategoryById(newEventDto.getCategory());
 
+        LocationInMap location = geoClient
+                .getLocFromYandex(newEventDto.getLocation().getLat(), newEventDto.getLocation().getLon());
+        LocationInMap locationSaved = locationRepository.save(location);
+
         Event createdEvent = EventMapper.newEventDtoToEvent(newEventDto, user, category);
+        createdEvent.setLocation(locationSaved);
         createdEvent.setConfirmedRequests(0L);
         createdEvent.setPublishedOn(LocalDateTime.now());
         createdEvent.setState(StateEvent.PENDING.toString());
@@ -272,32 +277,11 @@ public class EventService {
                     .orElseThrow(() -> new EntityNotFoundException("Category with id=" +
                             updateEventAdminRequest.getCategory() + " was not found")));
         }
-       setViewToEvents(updateEventAdminRequest, event);
+        setViewToEvents(updateEventAdminRequest, event);
         setViewToEvents(List.of(event));
         eventRepository.save(event);
         return EventMapper.eventToEventFullDto(event);
     }
-
-
-
-    public LocationInMap getLoc(Float lat, Float lon)  {
-        log.info("ПЕРЕДАЕМ КООРДИНАТЫ - " + lat + " и " + lon);
-        LocationInMap ansver = geoClient.getLocFromYandex(lat, lon);
-
-        log.info("ПОЛУЧИЛИ ОТВЕТ!!");
-
-        return ansver;
-
-    }
-
-
-
-
-
-
-
-
-
 
 
     private void checkDataTime(LocalDateTime eventDate) {
@@ -378,8 +362,10 @@ public class EventService {
             event.setDescription(updateEvent.getDescription());
         }
         if (updateEvent.getLocation() != null) {
-            event.setLon(updateEvent.getLocation().getLon());
-            event.setLat(updateEvent.getLocation().getLat());
+            LocationInMap location = geoClient
+                    .getLocFromYandex(updateEvent.getLocation().getLat(), updateEvent.getLocation().getLon());
+            LocationInMap locationSaved = locationRepository.save(location);
+            event.setLocation(locationSaved);
         }
         if (updateEvent.getParticipantLimit() != null) {
             event.setParticipantLimit(updateEvent.getParticipantLimit());
@@ -394,6 +380,4 @@ public class EventService {
             event.setTitle(updateEvent.getTitle());
         }
     }
-
-
 }

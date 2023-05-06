@@ -32,30 +32,6 @@ public class GeoClient extends BaseClient {
         );
     }
 
-//    public String getLocFromYandex(Float lat, Float lon) {
-//        Gson gson = new Gson();
-//        Map<String, Object> parameters = Map.of(
-//                "lat", lat,
-//                "lon", lon
-//        );
-//
-////        37.611347,55.760241
-//
-//
-//        ResponseEntity<Object> objectResponseEntity =
-//                get("{lat},{lon}", parameters);
-//
-//        System.out.println(objectResponseEntity.toString());
-//
-//        String json = gson.toJson(objectResponseEntity.getBody());
-//
-//
-//
-//
-////        ViewStatsDto[] viewStatDtoArray = gson.fromJson(json, ViewStatsDto[].class);
-//        return json;
-//    }
-
     public LocationInMap getLocFromYandex(Float lat, Float lon) {
         Gson gson = new Gson();
         Map<String, Object> parameters = Map.of(
@@ -63,10 +39,8 @@ public class GeoClient extends BaseClient {
                 "lon", lon
         );
 
-
         ResponseEntity<Object> objectResponse =
                 get("/1.x/?apikey=f4ceba6c-6848-4e79-a86f-6c6ccad4a91f&geocode={lon},{lat}&format=json", parameters);
-
 
         String jsonString = gson.toJson(objectResponse.getBody());
         LocationInMap location = new LocationInMap();
@@ -87,37 +61,25 @@ public class GeoClient extends BaseClient {
             JSONObject geocoderMetaDataJson = (JSONObject) metaDataPropertyJson.get("GeocoderMetaData");
             String text = (String) geocoderMetaDataJson.get("text");
             JSONObject addressJson = (JSONObject) geocoderMetaDataJson.get("Address");
-            String countryCode = (String) addressJson.get("country_code");
-
+            String countryCode = "Данная локация не принадлежит ни одной из стран";
+            if(addressJson.get("country_code") != null) {
+                countryCode = (String) addressJson.get("country_code");
+            }
+            JSONArray componentsJsonArray = (JSONArray) addressJson.get("Components");
+            String city = "Данная локация не входит ни в какой город";
+            if (componentsJsonArray.size() >= 4) {
+                JSONObject cityObject = (JSONObject) componentsJsonArray.get(3);
+                city = (String) cityObject.get("name");
+            }
             location.setText(text);
+            location.setCity(city);
             location.setCountryCode(countryCode);
             location.setLat(lat);
             location.setLon(lon);
-
-            System.out.println(location.toString());
-
-
-
-
-
         } catch (ParseException e) {
             System.out.println("Parsing Error " + e.getMessage());
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
         return location;
     }
-
 }
 

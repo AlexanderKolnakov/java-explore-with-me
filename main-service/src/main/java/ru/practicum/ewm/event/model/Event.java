@@ -3,6 +3,7 @@ package ru.practicum.ewm.event.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import ru.practicum.ewm.category.models.CategoryDto;
+import ru.practicum.ewm.location.LocationInMap;
 import ru.practicum.ewm.user.models.UserDto;
 
 import javax.persistence.*;
@@ -49,11 +50,9 @@ public class Event {
     @JoinColumn(name = "USER_ID")
     private UserDto initiator; // Пользователь (краткая информация)
 
-    @Column(name = "LAT")
-    private float lat;   // Широта
-
-    @Column(name = "LON")
-    private float lon;   // Долгота
+    @ManyToOne
+    @JoinColumn(name = "LOCATION_IN_MAP_ID")
+    private LocationInMap location;   // Место положение проведения мероприятия
 
     @Column(name = "PAID")
     private boolean paid;   // Нужно ли оплачивать участие
