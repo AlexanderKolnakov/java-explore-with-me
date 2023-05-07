@@ -1,4 +1,4 @@
-package ru.practicum.ewm.event.model;
+package ru.practicum.ewm.location;
 
 
 import lombok.*;
@@ -9,7 +9,6 @@ import lombok.*;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-
 public class Location {
 
     // Широта и долгота места проведения события

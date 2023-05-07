@@ -10,6 +10,7 @@ import ru.practicum.ewm.StatsClient;
 import ru.practicum.ewm.category.CategoryRepository;
 import ru.practicum.ewm.category.CategoryService;
 import ru.practicum.ewm.category.models.CategoryDto;
+import ru.practicum.ewm.clients.GeoClient;
 import ru.practicum.ewm.dto.EndpointHitDto;
 import ru.practicum.ewm.dto.ViewStatsDto;
 import ru.practicum.ewm.event.enums.SortEvent;
@@ -17,6 +18,8 @@ import ru.practicum.ewm.event.enums.StateActionByAdmin;
 import ru.practicum.ewm.event.enums.StateActionByUser;
 import ru.practicum.ewm.event.enums.StateEvent;
 import ru.practicum.ewm.event.model.*;
+import ru.practicum.ewm.location.LocationInMap;
+import ru.practicum.ewm.location.LocationRepository;
 import ru.practicum.ewm.participationReques.ParticipationRequestRepository;
 import ru.practicum.ewm.participationReques.enums.StatusRequest;
 import ru.practicum.ewm.participationReques.model.ParticipationRequestDto;
@@ -36,12 +39,15 @@ import java.util.stream.Collectors;
 public class EventService {
 
     private final StatsClient statsClient;
+    private final GeoClient geoClient;
     private final EventRepository eventRepository;
     private final CategoryService categoryService;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final LocationRepository locationRepository;
     private final ParticipationRequestRepository participationRequestRepository;
 
+    @Transactional(rollbackOn = Exception.class)
     public List<EventShortDto> getEvents(String text, Long categories, Boolean paid, LocalDateTime rangeStart,
                                          LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, int from, int size,
                                          String ip, String url) {
@@ -49,6 +55,9 @@ public class EventService {
         Pageable pageable = PageRequest.of((from / size), size);
         if (rangeStart == null) {
             rangeStart = LocalDateTime.now();
+        }
+        if (rangeEnd == null) {
+            rangeEnd = LocalDateTime.now().plusYears(2);
         }
         List<Event> eventList;
 
@@ -75,6 +84,7 @@ public class EventService {
         return EventMapper.listEventToListEventShortDto(resultList);
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public EventFullDto getFullEventsById(Long id, String ip, String url) {
         checkEventById(id);
         createHit(ip, url);
@@ -102,7 +112,12 @@ public class EventService {
         UserDto user = checkUserById(userId);
         CategoryDto category = categoryService.getCategoryById(newEventDto.getCategory());
 
+        LocationInMap location = geoClient
+                .getLocFromYandex(newEventDto.getLocation().getLat(), newEventDto.getLocation().getLon());
+        LocationInMap locationSaved = locationRepository.save(location);
+
         Event createdEvent = EventMapper.newEventDtoToEvent(newEventDto, user, category);
+        createdEvent.setLocation(locationSaved);
         createdEvent.setConfirmedRequests(0L);
         createdEvent.setPublishedOn(LocalDateTime.now());
         createdEvent.setState(StateEvent.PENDING.toString());
@@ -136,21 +151,9 @@ public class EventService {
         if (event.getState().equals(StateEvent.PENDING.toString())
                 || event.getState().equals(StateEvent.CANCELED.toString())) {
 
-            if (updateEventUserRequest.getAnnotation() != null) {
-                event.setAnnotation(updateEventUserRequest.getAnnotation());
-            }
-            if (updateEventUserRequest.getDescription() != null) {
-                event.setDescription(updateEventUserRequest.getDescription());
-            }
+            setViewToEvents(updateEventUserRequest, event);
             if (updateEventUserRequest.getEventDate() != null) {
                 event.setEventDate(updateEventUserRequest.getEventDate());
-            }
-            if (updateEventUserRequest.getLocation() != null) {
-                event.setLat(updateEventUserRequest.getLocation().getLat());
-                event.setLon(updateEventUserRequest.getLocation().getLon());
-            }
-            if (updateEventUserRequest.getParticipantLimit() != null) {
-                event.setParticipantLimit(updateEventUserRequest.getParticipantLimit());
             }
             if (updateEventUserRequest.getStateAction() != null) {
                 if (updateEventUserRequest.getStateAction()
@@ -161,16 +164,6 @@ public class EventService {
                         .equals(StateActionByUser.SEND_TO_REVIEW.toString())) {
                     event.setState(StateEvent.PENDING.toString());
                 }
-            }
-            if (updateEventUserRequest.getTitle() != null) {
-                event.setTitle(updateEventUserRequest.getTitle());
-            }
-            if (updateEventUserRequest.getPaid() != null) {
-                event.setPaid(updateEventUserRequest.getPaid());
-            }
-
-            if (updateEventUserRequest.getRequestModeration() != null) {
-                event.setRequestModeration(updateEventUserRequest.getRequestModeration());
             }
             setViewToEvents(List.of(event));
             eventRepository.save(event);
@@ -289,32 +282,12 @@ public class EventService {
                     .orElseThrow(() -> new EntityNotFoundException("Category with id=" +
                             updateEventAdminRequest.getCategory() + " was not found")));
         }
-        if (updateEventAdminRequest.getAnnotation() != null) {
-            event.setAnnotation(updateEventAdminRequest.getAnnotation());
-        }
-        if (updateEventAdminRequest.getDescription() != null) {
-            event.setDescription(updateEventAdminRequest.getDescription());
-        }
-        if (updateEventAdminRequest.getLocation() != null) {
-            event.setLon(updateEventAdminRequest.getLocation().getLon());
-            event.setLat(updateEventAdminRequest.getLocation().getLat());
-        }
-        if (updateEventAdminRequest.getParticipantLimit() != null) {
-            event.setParticipantLimit(updateEventAdminRequest.getParticipantLimit());
-        }
-        if (updateEventAdminRequest.getPaid() != null) {
-            event.setPaid(updateEventAdminRequest.getPaid());
-        }
-        if (updateEventAdminRequest.getRequestModeration() != null) {
-            event.setRequestModeration(updateEventAdminRequest.getRequestModeration());
-        }
-        if (updateEventAdminRequest.getTitle() != null) {
-            event.setTitle(updateEventAdminRequest.getTitle());
-        }
+        setViewToEvents(updateEventAdminRequest, event);
         setViewToEvents(List.of(event));
         eventRepository.save(event);
         return EventMapper.eventToEventFullDto(event);
     }
+
 
     private void checkDataTime(LocalDateTime eventDate) {
         if (eventDate.plusHours(2).isBefore(LocalDateTime.now())) {
@@ -384,5 +357,32 @@ public class EventService {
             Long hits = eventViews.get(String.format("/events/%s", event.getId()));
             event.setViews(hits != null ? hits : 0);
         }).collect(Collectors.toList());
+    }
+
+    private void setViewToEvents(UpdateEventRequest updateEvent, Event event) {
+        if (updateEvent.getAnnotation() != null) {
+            event.setAnnotation(updateEvent.getAnnotation());
+        }
+        if (updateEvent.getDescription() != null) {
+            event.setDescription(updateEvent.getDescription());
+        }
+        if (updateEvent.getLocation() != null) {
+            LocationInMap location = geoClient
+                    .getLocFromYandex(updateEvent.getLocation().getLat(), updateEvent.getLocation().getLon());
+            LocationInMap locationSaved = locationRepository.save(location);
+            event.setLocation(locationSaved);
+        }
+        if (updateEvent.getParticipantLimit() != null) {
+            event.setParticipantLimit(updateEvent.getParticipantLimit());
+        }
+        if (updateEvent.getPaid() != null) {
+            event.setPaid(updateEvent.getPaid());
+        }
+        if (updateEvent.getRequestModeration() != null) {
+            event.setRequestModeration(updateEvent.getRequestModeration());
+        }
+        if (updateEvent.getTitle() != null) {
+            event.setTitle(updateEvent.getTitle());
+        }
     }
 }

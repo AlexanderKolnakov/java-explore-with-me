@@ -78,7 +78,7 @@ public class EventController {
     public EventFullDto updateFullEventsByUserId(
             @PathVariable Long userId,
             @PathVariable Long eventId,
-            @RequestBody  @Valid UpdateEventUserRequest updateEventUserRequest) {
+            @RequestBody @Valid UpdateEventUserRequest updateEventUserRequest) {
         log.debug("Получен PATCH запрос на обновление информации о событии с id " + eventId + ", " +
                 "добавленной пользователем c id - " + userId);
         return eventService.updateFullEventsByUserId(updateEventUserRequest, userId, eventId);
@@ -98,7 +98,7 @@ public class EventController {
     public EventRequestStatusUpdateResult updateEventRequestStatusByUserId(
             @PathVariable Long userId,
             @PathVariable Long eventId,
-            @RequestBody  EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest) {
+            @RequestBody EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest) {
         log.debug("Получен PATCH запрос на обновление информации о заявке на участие в событии с id " + eventId + ", " +
                 "добавленной пользователем c id - " + userId);
         return eventService.updateEventRequestStatusByUserId(eventRequestStatusUpdateRequest, userId, eventId);

@@ -2,7 +2,10 @@ package ru.practicum.ewm.event;
 
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.category.models.CategoryDto;
-import ru.practicum.ewm.event.model.*;
+import ru.practicum.ewm.event.model.Event;
+import ru.practicum.ewm.event.model.EventFullDto;
+import ru.practicum.ewm.event.model.EventShortDto;
+import ru.practicum.ewm.event.model.NewEventDto;
 import ru.practicum.ewm.user.models.UserDto;
 import ru.practicum.ewm.user.models.UserShortDto;
 
@@ -23,8 +26,6 @@ public class EventMapper {
         event.setDescription(newEventDto.getDescription());
         event.setEventDate(newEventDto.getEventDate());
         event.setInitiator(user);
-        event.setLon(newEventDto.getLocation().getLon());
-        event.setLat(newEventDto.getLocation().getLat());
         event.setPaid(newEventDto.isPaid());
         event.setParticipantLimit(newEventDto.getParticipantLimit());
         event.setRequestModeration(newEventDto.isRequestModeration());
@@ -45,7 +46,7 @@ public class EventMapper {
         eventFullDto.setEventDate(createdEvent.getEventDate());
         eventFullDto.setInitiator(new UserShortDto(createdEvent.getInitiator().getId(),
                 createdEvent.getInitiator().getName()));
-        eventFullDto.setLocation(new Location(createdEvent.getLat(), createdEvent.getLon()));
+        eventFullDto.setLocation(createdEvent.getLocation());
         eventFullDto.setPaid(createdEvent.isPaid());
         eventFullDto.setParticipantLimit(createdEvent.getParticipantLimit());
         eventFullDto.setPublishedOn(createdEvent.getPublishedOn());
