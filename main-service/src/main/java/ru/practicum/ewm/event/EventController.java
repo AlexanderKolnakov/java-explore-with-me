@@ -24,7 +24,7 @@ public class EventController {
     @GetMapping("/events")
     public List<EventShortDto> getEvents(
             @RequestParam(required = false) String text,
-            @RequestParam(required = false) Long categories,
+            @RequestParam(required = false) Long categoriesId,
             @RequestParam(name = "paid", required = false) Boolean paid,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
@@ -36,7 +36,7 @@ public class EventController {
         String ip = request.getRemoteAddr();
         String url = request.getRequestURI();
         log.info("Получен GET запрос на получение списка событий по параметрам");
-        return eventService.getEvents(text, categories, paid, rangeStart, rangeEnd,
+        return eventService.getEvents(text, categoriesId, paid, rangeStart, rangeEnd,
                 onlyAvailable, sort, from, size, ip, url);
     }
 

@@ -60,9 +60,7 @@ public class EventService {
             rangeEnd = LocalDateTime.now().plusYears(2);
         }
         List<Event> eventList;
-
         if (onlyAvailable) {
-
             eventList = eventRepository
                     .findPublicEventWhitParametersByUserWhereEventAvailable(rangeStart, rangeEnd,
                             StateEvent.PUBLISHED.toString(), categories, paid, text, pageable)
@@ -185,7 +183,6 @@ public class EventService {
     @Transactional(rollbackOn = Exception.class)
     public EventRequestStatusUpdateResult updateEventRequestStatusByUserId(EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest,
                                                                            Long userId, Long eventId) {
-
         checkUserById(userId);
         Event event = checkEventById(eventId);
         checkEventParticipantLimit(event);
@@ -208,7 +205,6 @@ public class EventService {
             eventRepository.save(event);
             return new EventRequestStatusUpdateResult(resultList, Collections.emptyList());
         }
-
         List<ParticipationRequestDto> confirmedList = new ArrayList<>();
         List<ParticipationRequestDto> rejectedList = new ArrayList<>();
 
