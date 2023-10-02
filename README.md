@@ -1,6 +1,6 @@
 # <span style="color: white">**JAVA-explore-with-me**
 ____
-![JAVA-explore-with-me](/explore-with-me.jpg)
+![JAVA-explore-with-me](/explore-with-me.png)
 
  ### <span style="color: white">Данное приложение предназначено для создания/поиска событий или мероприятий. ###
 <span style="color: white">Приложение использует слудющие технологии:
