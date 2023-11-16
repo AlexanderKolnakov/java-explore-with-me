@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 public class Event {
 
     // Событие
+    // Тест
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
